@@ -2,6 +2,7 @@ package com.BE.QuitCare.api;
 
 import com.BE.QuitCare.dto.AccountResponse;
 import com.BE.QuitCare.dto.LoginRequest;
+import com.BE.QuitCare.dto.RegisterRequest;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,8 @@ public class AuthenticationAPI {
     AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody Account account){
-        Account newAccount = authenticationService.register(account);
+    public ResponseEntity register(@RequestBody RegisterRequest registerRequest){
+        Account newAccount = authenticationService.register(registerRequest);
         return ResponseEntity.ok(newAccount);
     }
     @PostMapping("/api/login")

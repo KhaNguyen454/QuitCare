@@ -44,6 +44,9 @@ public class TokenService {
 
     // form token to Claim Object
     public Claims extractAllClaims(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("JWT token is null or empty");
+        }
         return  Jwts.parser().
                 verifyWith(getSigninKey())
                 .build()

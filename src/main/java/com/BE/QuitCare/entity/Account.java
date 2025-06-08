@@ -1,6 +1,7 @@
 package com.BE.QuitCare.entity;
 
 
+import com.BE.QuitCare.enums.AccountStatus;
 import com.BE.QuitCare.enums.Gender;
 import com.BE.QuitCare.enums.Role;
 import jakarta.persistence.*;
@@ -9,6 +10,7 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,15 +23,30 @@ public class Account implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String email;
     private String fullName;
+    @Column(nullable = false)
     private String password;
+    private String username;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AccountStatus status;
+
+    private LocalDateTime createAt = LocalDateTime.now();// tự sinh khi tạo
+
+    @PrePersist
+    protected void onCreate() {
+        this.createAt = LocalDateTime.now();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

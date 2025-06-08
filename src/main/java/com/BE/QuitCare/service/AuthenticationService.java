@@ -3,9 +3,11 @@ package com.BE.QuitCare.service;
 import com.BE.QuitCare.dto.AccountResponse;
 import com.BE.QuitCare.dto.EmailDetail;
 import com.BE.QuitCare.dto.LoginRequest;
+import com.BE.QuitCare.dto.RegisterRequest;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.exception.AuthenticationException;
 import com.BE.QuitCare.repository.AuthenticationRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,16 +34,22 @@ public class AuthenticationService implements UserDetailsService {
     @Autowired
     TokenService tokenService;
 
-    public Account register(Account account){
-        account.setPassword(passwordEncoder.encode(account.getPassword()));
-        Account newAccount = authenticationRepository.save(account);
+    @Transactional
+    public Account register(RegisterRequest registerRequest){
+        if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
+            throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp");
+        }
+
+        String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
+        Account account = registerRequest.toEntity(encodedPassword);
+        Account savedAccount = authenticationRepository.save(account);
 
         EmailDetail emailDetail = new EmailDetail();
         emailDetail.setRecipient(account.getEmail());
         emailDetail.setSubject("Welcome to my system");
         emailService.sendMail(emailDetail);
 
-        return newAccount;
+        return savedAccount;
     }
 
     public AccountResponse login(LoginRequest loginRequest){

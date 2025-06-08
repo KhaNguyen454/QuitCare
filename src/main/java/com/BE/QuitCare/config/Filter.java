@@ -70,6 +70,7 @@ public class Filter extends OncePerRequestFilter {
             if (token == null) {
                 resolver.resolveException(request, response, null, new AuthenticationException("Emty token!") {
                 });
+                return;// Dừng sử lý tiếp
             }
 
             // co cung cap Token
@@ -100,7 +101,7 @@ public class Filter extends OncePerRequestFilter {
 
     public String getToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer")) return null;
         return authHeader.substring(7);
     }
 }
