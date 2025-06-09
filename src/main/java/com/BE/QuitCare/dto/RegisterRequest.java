@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class RegisterRequest {
+    @NotBlank(message = "Họ và tên không được để trống")
+    private String fullname;
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")

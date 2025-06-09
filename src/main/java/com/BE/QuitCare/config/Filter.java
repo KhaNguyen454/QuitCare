@@ -33,8 +33,8 @@ public class Filter extends OncePerRequestFilter {
     @Autowired
     TokenService tokenService;
     private final List<String> PUBLIC_API = List.of(
-            "POST:/api/register",
-            "POST:/api/login"
+            "POST:/api/auth/register",
+            "POST:/api/auth/login"
     );
 
     public boolean isPublicAPI(String uri, String method) {//Cat cac API xem API do co public hay khon
@@ -70,7 +70,7 @@ public class Filter extends OncePerRequestFilter {
             if (token == null) {
                 resolver.resolveException(request, response, null, new AuthenticationException("Emty token!") {
                 });
-//                return;// Dừng sử lý tiếp
+                return;// Dừng sử lý tiếp
             }
 
             // co cung cap Token
