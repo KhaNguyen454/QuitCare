@@ -34,7 +34,6 @@ public class AuthenticationService implements UserDetailsService {
     @Autowired
     TokenService tokenService;
 
-    @Transactional
     public Account register(RegisterRequest registerRequest){
         if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
             throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp");

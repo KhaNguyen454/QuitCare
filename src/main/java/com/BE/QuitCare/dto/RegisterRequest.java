@@ -3,6 +3,9 @@ package com.BE.QuitCare.dto;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.enums.AccountStatus;
 import com.BE.QuitCare.enums.Role;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,6 +15,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class RegisterRequest {
+
     @NotBlank(message = "Họ và tên không được để trống")
     private String fullname;
 
@@ -33,6 +37,7 @@ public class RegisterRequest {
         Account account = new Account();
         account.setEmail(this.email);
         account.setUsername(this.username);
+        account.setFullName(this.fullname);
         account.setPassword(encodedPassword);
         account.setRole(Role.GUEST);
         account.setStatus(AccountStatus.ACTIVE);
