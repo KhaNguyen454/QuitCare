@@ -1,9 +1,6 @@
 package com.BE.QuitCare.service;
 
-import com.BE.QuitCare.dto.AccountResponse;
-import com.BE.QuitCare.dto.EmailDetail;
-import com.BE.QuitCare.dto.LoginRequest;
-import com.BE.QuitCare.dto.RegisterRequest;
+import com.BE.QuitCare.dto.*;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.exception.AuthenticationException;
 import com.BE.QuitCare.repository.AuthenticationRepository;
@@ -12,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -69,6 +67,18 @@ public class AuthenticationService implements UserDetailsService {
         accountResponse.setToken(token);
         return accountResponse;
     }
+
+    public Account updateOwnProfile(UpdateProfileRequest dto) {
+        // Lấy Account từ SecurityContext
+        Account currentUser = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        currentUser.setFullName(dto.getFullname());
+        currentUser.setUsername(dto.getUsername());
+        currentUser.setGender(dto.getGender());
+
+        return authenticationRepository.save(currentUser);
+    }
+
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
