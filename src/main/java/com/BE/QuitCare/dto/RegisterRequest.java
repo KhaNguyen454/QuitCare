@@ -33,6 +33,7 @@ public class RegisterRequest {
         Account account = new Account();
         account.setEmail(this.email);
         account.setUsername(this.username);
+        account.setFullName(this.fullname); // BẮT BUỘC PHẢI THÊM
         account.setPassword(encodedPassword);
         account.setRole(Role.GUEST);
         account.setStatus(AccountStatus.ACTIVE);

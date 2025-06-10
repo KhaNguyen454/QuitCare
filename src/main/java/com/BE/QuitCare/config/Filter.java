@@ -40,6 +40,7 @@ public class Filter extends OncePerRequestFilter {
     public boolean isPublicAPI(String uri, String method) {//Cat cac API xem API do co public hay khon
         AntPathMatcher matcher = new AntPathMatcher();
 
+         //GET thì cho qua luôn
         if (method.equals("GET")) return true;
 
         return PUBLIC_API.stream().anyMatch(pattern -> {
@@ -68,9 +69,10 @@ public class Filter extends OncePerRequestFilter {
             //xác thực
             String token = getToken(request);
             if (token == null) {
-                resolver.resolveException(request, response, null, new AuthenticationException("Emty token!") {
+
+                resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
                 });
-                return;// Dừng sử lý tiếp
+                return;// Dừng xử lý tiếp
             }
 
             // co cung cap Token
@@ -89,8 +91,7 @@ public class Filter extends OncePerRequestFilter {
                 return;
             }
             // => token dung
-            UsernamePasswordAuthenticationToken
-                    authenToken =
+            UsernamePasswordAuthenticationToken authenToken =
                     new UsernamePasswordAuthenticationToken(account, token, account.getAuthorities());
             authenToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenToken);
