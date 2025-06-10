@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class AuthenticationService implements UserDetailsService {
 
@@ -31,23 +34,34 @@ public class AuthenticationService implements UserDetailsService {
     ModelMapper modelMapper;
     @Autowired
     TokenService tokenService;
-
+  
     public Account register(RegisterRequest registerRequest){
         if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
             throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp");
         }
 
+        if (authenticationRepository.findAccountByEmail(registerRequest.getEmail()) != null) {
+            throw new IllegalArgumentException("Email đã được sử dụng");
+        }
+
         String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
         Account account = registerRequest.toEntity(encodedPassword);
+        account.setFullName(registerRequest.getFullname()); // THÊM DÒNG NÀY
+
         Account savedAccount = authenticationRepository.save(account);
 
-        EmailDetail emailDetail = new EmailDetail();
-        emailDetail.setRecipient(account.getEmail());
-        emailDetail.setSubject("Welcome to my system");
-        emailService.sendMail(emailDetail);
+        try {
+            EmailDetail emailDetail = new EmailDetail();
+            emailDetail.setRecipient(account.getEmail());
+            emailDetail.setSubject("Welcome to my system");
+            emailService.sendMail(emailDetail);
+        } catch (Exception e) {
+            System.err.println("Không thể gửi email: " + e.getMessage());
+        }
 
         return savedAccount;
     }
+
 
     public AccountResponse login(LoginRequest loginRequest){
         try {
@@ -67,6 +81,31 @@ public class AuthenticationService implements UserDetailsService {
         accountResponse.setToken(token);
         return accountResponse;
     }
+    public List<AccountDTO> getAllAccounts() {
+        return authenticationRepository.findAll()
+                .stream()
+                .map(account -> modelMapper.map(account, AccountDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    public AccountDTO updateAccount(Long id, AccountDTO dto) {
+        Account account = authenticationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        account.setFullName(dto.getFullName());
+        account.setUsername(dto.getUsername());
+        account.setGender(dto.getGender());
+        account.setRole(dto.getRole());
+        account.setStatus(dto.getStatus());
+
+        Account updated = authenticationRepository.save(account);
+        return modelMapper.map(updated, AccountDTO.class);
+    }
+
+    public void deleteAccount(Long id) {
+        authenticationRepository.deleteById(id);
+    }
+
 
     public Account updateOwnProfile(UpdateProfileRequest dto) {
         // Lấy Account từ SecurityContext
