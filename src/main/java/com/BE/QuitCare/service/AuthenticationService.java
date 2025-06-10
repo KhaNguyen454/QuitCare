@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,8 +34,7 @@ public class AuthenticationService implements UserDetailsService {
     ModelMapper modelMapper;
     @Autowired
     TokenService tokenService;
-
-
+  
     public Account register(RegisterRequest registerRequest){
         if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
             throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp");
@@ -104,6 +104,18 @@ public class AuthenticationService implements UserDetailsService {
 
     public void deleteAccount(Long id) {
         authenticationRepository.deleteById(id);
+    }
+
+
+    public Account updateOwnProfile(UpdateProfileRequest dto) {
+        // Lấy Account từ SecurityContext
+        Account currentUser = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        currentUser.setFullName(dto.getFullname());
+        currentUser.setUsername(dto.getUsername());
+        currentUser.setGender(dto.getGender());
+
+        return authenticationRepository.save(currentUser);
     }
 
 

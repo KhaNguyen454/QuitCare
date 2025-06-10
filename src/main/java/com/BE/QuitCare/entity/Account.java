@@ -26,14 +26,16 @@ public class Account implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
     private String fullName;
+
     @Column(nullable = false)
     private String password;
+
     private String username;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private Role role;
 
