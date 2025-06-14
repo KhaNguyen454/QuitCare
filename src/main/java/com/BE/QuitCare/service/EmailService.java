@@ -26,7 +26,7 @@ public class EmailService {//Sử lý tất cả những gì liên quan đến e
         try {
             Context context = new Context();
 
-            context.setVariable("KhaNguyen", context);
+            context.setVariable("name", "Kha Nguyen");
 
             String html = templateEngine.process("emailtemplate", context);
             // Creating a simple mail message

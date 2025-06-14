@@ -102,6 +102,17 @@ public class AuthenticationService implements UserDetailsService {
         return modelMapper.map(updated, AccountDTO.class);
     }
 
+    public UserRequest updateForUser(Long id, UserRequest dto) {
+        Account account = authenticationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        account.setFullName(dto.getFullName());
+        account.setUsername(dto.getUsername());
+        account.setGender(dto.getGender());
+
+        Account updated = authenticationRepository.save(account);
+        return modelMapper.map(updated, UserRequest.class);
+    }
     public void deleteAccount(Long id) {
         authenticationRepository.deleteById(id);
     }
