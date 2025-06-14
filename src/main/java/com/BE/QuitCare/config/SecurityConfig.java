@@ -46,6 +46,9 @@ public class SecurityConfig {
                 )
                 .userDetailsService(authenticationService)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2Login(oauth -> oauth
+                        .defaultSuccessUrl("/api/auth/oauth2/login/success", true)
+                )
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class).build();
     }
 }

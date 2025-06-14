@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @SecurityRequirement(name = "api")
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admin/user")
 public class AdminAPI {
     @Autowired
     private AuthenticationService authenticationService;

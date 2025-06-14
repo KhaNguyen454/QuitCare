@@ -34,7 +34,9 @@ public class Filter extends OncePerRequestFilter {
     TokenService tokenService;
     private final List<String> PUBLIC_API = List.of(
             "POST:/api/auth/register",
-            "POST:/api/auth/login"
+            "POST:/api/auth/login",
+            "GET:/api/auth/oauth2/login/success",
+            "GET:/oauth2/**"
     );
 
     public boolean isPublicAPI(String uri, String method) {//Cat cac API xem API do co public hay khon
