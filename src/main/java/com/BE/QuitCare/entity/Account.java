@@ -68,6 +68,14 @@ public class Account implements UserDetails {
     @OneToOne(mappedBy = "account")
     private Smoking_Status smokingStatus;
 
+    @OneToMany(mappedBy = "account")
+    @JsonIgnore
+    List<SessionUser> sessionUsers;
+
+
+
+
+
 
 }
 
