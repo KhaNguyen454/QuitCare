@@ -29,11 +29,7 @@ public class AuthenticationAPI {
         AccountResponse account = authenticationService.login(loginRequest);
         return ResponseEntity.ok(account);
     }
-    @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@RequestBody @Valid UpdateProfileRequest request) {
-        Account updated = authenticationService.updateOwnProfile(request);
-        return ResponseEntity.ok(updated);
-    }
+
 
 
 }

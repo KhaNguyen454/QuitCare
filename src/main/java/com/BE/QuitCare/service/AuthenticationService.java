@@ -107,15 +107,17 @@ public class AuthenticationService implements UserDetailsService {
     }
 
 
-    public Account updateOwnProfile(UpdateProfileRequest dto) {
+    public UpdateProfileRequest updateOwnProfile(Long id, UpdateProfileRequest dto) {
         // Lấy Account từ SecurityContext
-        Account currentUser = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Account account = authenticationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+        account.setFullName(dto.getFullname());
+        account.setUsername(dto.getUsername());
+        account.setGender(dto.getGender());
 
-        currentUser.setFullName(dto.getFullname());
-        currentUser.setUsername(dto.getUsername());
-        currentUser.setGender(dto.getGender());
+        Account updated = authenticationRepository.save(account);
+        return modelMapper.map(updated, UpdateProfileRequest.class);
 
-        return authenticationRepository.save(currentUser);
     }
 
 
