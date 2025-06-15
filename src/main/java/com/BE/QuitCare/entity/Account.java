@@ -7,6 +7,7 @@ import com.BE.QuitCare.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -72,6 +73,9 @@ public class Account implements UserDetails {
     @JsonIgnore
     List<SessionUser> sessionUsers;
 
+    @OneToMany(mappedBy = "account")
+    @JsonIgnore
+    private List<UserMembership> memberships;
 
 
 
