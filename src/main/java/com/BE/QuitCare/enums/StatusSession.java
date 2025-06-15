@@ -1,6 +1,6 @@
 package com.BE.QuitCare.enums;
 
-public enum Status {
+public enum StatusSession {
     SCHEDULED,
     COMPLETED,
     CANCELLED
