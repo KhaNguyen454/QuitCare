@@ -23,6 +23,9 @@ public class CommunityPost {
 
     private LocalDateTime createAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     @OneToMany(mappedBy = "communityPost")
             @JsonIgnore
     List<Comment> comments;

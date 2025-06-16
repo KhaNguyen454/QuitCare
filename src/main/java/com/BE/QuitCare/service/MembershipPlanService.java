@@ -1,5 +1,6 @@
 package com.BE.QuitCare.service;
 
+import com.BE.QuitCare.dto.MembershipPlanDTO;
 import com.BE.QuitCare.entity.MembershipPlan;
 import com.BE.QuitCare.repository.MembershipPlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MembershipPlanService {
@@ -14,35 +16,64 @@ public class MembershipPlanService {
     @Autowired
     private MembershipPlanRepository repository;
 
-    public List<MembershipPlan> getAllPlans() {
-        return repository.findByDeletedFalse();
+    // Convert Entity -> DTO
+    private MembershipPlanDTO toDTO(MembershipPlan entity) {
+        MembershipPlanDTO dto = new MembershipPlanDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setPrice(entity.getPrice());
+        dto.setDescription(entity.getDescription());
+        return dto;
     }
 
-    public Optional<MembershipPlan> getPlanById(Long id) {
-        return repository.findById(id)
-                .filter(plan -> !Boolean.TRUE.equals(plan.getDeleted()));
+    // Convert DTO -> Entity
+    private MembershipPlan toEntity(MembershipPlanDTO dto) {
+        MembershipPlan entity = new MembershipPlan();
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setPrice(dto.getPrice());
+        entity.setDescription(dto.getDescription());
+        return entity;
     }
 
-    public MembershipPlan createPlan(MembershipPlan plan) {
-        plan.setDeleted(false); // đảm bảo không bị xóa
-        return repository.save(plan);
+    public List<MembershipPlanDTO> getAll() {
+        return repository.findByDeletedFalse()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public MembershipPlan updatePlan(Long id, MembershipPlan updatedPlan) {
-        return repository.findById(id).map(plan -> {
-            if (Boolean.TRUE.equals(plan.getDeleted())) return null;
-            plan.setName(updatedPlan.getName());
-            plan.setPrice(updatedPlan.getPrice());
-            plan.setDescription(updatedPlan.getDescription());
-            return repository.save(plan);
-        }).orElse(null);
+    public Optional<MembershipPlanDTO> getById(Long id) {
+        return repository.findByIdAndDeletedFalse(id)
+                .map(this::toDTO);
     }
 
-    public boolean deletePlan(Long id) {
-        return repository.findById(id).map(plan -> {
-            plan.setDeleted(true); // soft-delete
+    public MembershipPlanDTO create(MembershipPlanDTO dto) {
+        MembershipPlan plan = toEntity(dto);
+        plan.setDeleted(false);
+        return toDTO(repository.save(plan));
+    }
+
+    public MembershipPlanDTO update(Long id, MembershipPlanDTO dto) {
+        Optional<MembershipPlan> optionalPlan = repository.findByIdAndDeletedFalse(id);
+        if (optionalPlan.isPresent()) {
+            MembershipPlan plan = optionalPlan.get();
+            plan.setName(dto.getName());
+            plan.setPrice(dto.getPrice());
+            plan.setDescription(dto.getDescription());
+            return toDTO(repository.save(plan));
+        }
+        return null;
+    }
+
+    public boolean softDelete(Long id) {
+        Optional<MembershipPlan> optionalPlan = repository.findByIdAndDeletedFalse(id);
+        if (optionalPlan.isPresent()) {
+            MembershipPlan plan = optionalPlan.get();
+            plan.setDeleted(true);
             repository.save(plan);
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
 }

@@ -25,6 +25,7 @@ public class UserMembership {
 
     @Enumerated(EnumType.STRING)
     private MembershipStatus status;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private Account account;

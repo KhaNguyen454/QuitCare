@@ -1,47 +1,57 @@
 package com.BE.QuitCare.service;
 
+import com.BE.QuitCare.dto.CommentDTO;
 import com.BE.QuitCare.entity.Comment;
 import com.BE.QuitCare.repository.CommentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CommentService {
 
-    private final CommentRepository commentRepository;
+    @Autowired
+    private CommentRepository repository;
 
-    public List<Comment> getAllComments() {
-        return commentRepository.findAll();
+    @Autowired
+    private ModelMapper mapper;
+
+    public List<CommentDTO> getAll() {
+        return repository.findAll().stream()
+                .map(comment -> mapper.map(comment, CommentDTO.class))
+                .collect(Collectors.toList());
     }
 
-    public Comment getCommentById(Long id) {
-        return commentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + id));
+    public Optional<CommentDTO> getById(Long id) {
+        return repository.findById(id)
+                .map(comment -> mapper.map(comment, CommentDTO.class));
     }
 
-    public Comment createComment(Comment comment) {
-        return commentRepository.save(comment);
+    public CommentDTO create(CommentDTO dto) {
+        Comment comment = mapper.map(dto, Comment.class);
+        return mapper.map(repository.save(comment), CommentDTO.class);
     }
 
-    public Comment updateComment(Long id, Comment updatedComment) {
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + id));
-
-        comment.setContent(updatedComment.getContent());
-        comment.setCommentStatus(updatedComment.getCommentStatus());
-        comment.setCommunityPost(updatedComment.getCommunityPost());
-
-        return commentRepository.save(comment);
+    public CommentDTO update(Long id, CommentDTO dto) {
+        return repository.findById(id).map(comment -> {
+            comment.setContent(dto.getContent());
+            comment.setCommentStatus(dto.getCommentStatus());
+            comment.setCreateAt(dto.getCreateAt());
+            return mapper.map(repository.save(comment), CommentDTO.class);
+        }).orElse(null);
     }
 
-    public void deleteComment(Long id) {
-        if (!commentRepository.existsById(id)) {
-            throw new EntityNotFoundException("Comment not found with id: " + id);
-        }
-        commentRepository.deleteById(id);
+    public boolean softDelete(Long id) {
+        return repository.findById(id).map(comment -> {
+            repository.delete(comment); // hoặc đặt một flag nếu bạn dùng soft delete
+            return true;
+        }).orElse(false);
     }
 }

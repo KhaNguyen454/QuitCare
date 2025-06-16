@@ -1,13 +1,14 @@
 package com.BE.QuitCare.api;
 
+import com.BE.QuitCare.dto.UserMembershipDTO;
 import com.BE.QuitCare.entity.UserMembership;
 import com.BE.QuitCare.service.UserMembershipService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user-memberships")
@@ -18,27 +19,36 @@ public class UserMembershipAPI {
     private UserMembershipService service;
 
     @GetMapping
-    public List<UserMembership> getAll() {
-        return service.getAllUserMemberships();
+    public ResponseEntity<List<UserMembershipDTO>> getAll() {
+        return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
-    public Optional<UserMembership> getById(@PathVariable Long id) {
-        return service.getUserMembershipById(id);
+    public ResponseEntity<UserMembershipDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public UserMembership create(@RequestBody UserMembership userMembership) {
-        return service.createUserMembership(userMembership);
+    public ResponseEntity<UserMembershipDTO> create(@RequestBody UserMembershipDTO request) {
+        return ResponseEntity.ok(service.create(request));
     }
 
     @PutMapping("/{id}")
-    public UserMembership update(@PathVariable Long id, @RequestBody UserMembership updated) {
-        return service.updateUserMembership(id, updated);
+    public ResponseEntity<UserMembershipDTO> update(@PathVariable Long id, @RequestBody UserMembershipDTO request) {
+        UserMembershipDTO updated = service.update(id, request);
+        if (updated != null) {
+            return ResponseEntity.ok(updated);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
-    public boolean delete(@PathVariable Long id) {
-        return service.deleteUserMembership(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        if (service.softDelete(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
