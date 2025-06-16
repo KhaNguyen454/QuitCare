@@ -23,7 +23,7 @@ public class PaymentHistory
     StatusPaymentMethod status_payment_method;
 
     private LocalDateTime createAt = LocalDateTime.now();
-    private LocalDateTime UpdateAt = LocalDateTime.now();
+    private LocalDateTime updateAt;
 
 
     @OneToOne
