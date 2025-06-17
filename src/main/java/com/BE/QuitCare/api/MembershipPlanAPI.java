@@ -4,12 +4,17 @@ import com.BE.QuitCare.dto.MembershipPlanDTO;
 import com.BE.QuitCare.entity.MembershipPlan;
 import com.BE.QuitCare.service.MembershipPlanService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+@Tag(
+        name = "Các gói trong hệ thống"
+)
 @RestController
 @RequestMapping("/api/membership-plans")
 @SecurityRequirement(name = "api")

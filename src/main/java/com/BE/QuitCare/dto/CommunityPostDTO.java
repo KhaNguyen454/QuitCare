@@ -4,13 +4,21 @@ import com.BE.QuitCare.enums.CommentStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class CommunityPostDTO {
     private Long id;
-    private String content;
 
-    private CommentStatus commentStatus;
+    private String title;
 
-    private LocalDateTime createAt;
+    private String description;
+
+    private String image;
+
+    private String category;
+
+    private CommentStatus status;
+
+    private Date date;
 }

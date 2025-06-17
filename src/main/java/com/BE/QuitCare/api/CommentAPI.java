@@ -3,6 +3,7 @@ package com.BE.QuitCare.api;
 import com.BE.QuitCare.dto.CommentDTO;
 import com.BE.QuitCare.service.CommentService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(
+        name = "Bình luận của bài post"
+)
 @RestController
 @RequestMapping("/api/comments")
 @SecurityRequirement(name = "api")

@@ -4,10 +4,14 @@ import com.BE.QuitCare.dto.AccountDTO;
 import com.BE.QuitCare.dto.UpdateProfileRequest;
 import com.BE.QuitCare.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(
+        name = "API của các User trong hệ thống"
+)
 @RestController
 @SecurityRequirement(name ="api")
 @RequestMapping("/api/user")

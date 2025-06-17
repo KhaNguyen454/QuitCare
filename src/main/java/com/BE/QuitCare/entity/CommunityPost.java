@@ -7,6 +7,7 @@ import lombok.Setter;
 import net.minidev.json.annotate.JsonIgnore;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -17,14 +18,18 @@ public class CommunityPost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String content;
+    private String title;
 
-    private CommentStatus commentStatus;
+    private String description;
 
-    private LocalDateTime createAt = LocalDateTime.now();
+    private String image;
 
-    @Column(nullable = false)
-    private boolean deleted = false;
+    private String category;
+
+    @Enumerated(EnumType.STRING)
+    private CommentStatus status;
+
+    private Date date;
 
     @OneToMany(mappedBy = "communityPost")
             @JsonIgnore

@@ -8,6 +8,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
-    List<UserMembership> findAllByDeletedFalse();
-    Optional<UserMembership> findByIdAndDeletedFalse(Long id);
+
 }

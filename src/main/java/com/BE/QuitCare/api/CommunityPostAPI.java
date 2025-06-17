@@ -15,8 +15,6 @@ import java.util.List;
 @RequestMapping("/api/community-posts")
 @SecurityRequirement(name = "api")
 public class CommunityPostAPI {
-
-
     @Autowired
     private CommunityPostService service;
 
@@ -48,7 +46,7 @@ public class CommunityPostAPI {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.softDelete(id)) {
+        if (service.delete(id)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

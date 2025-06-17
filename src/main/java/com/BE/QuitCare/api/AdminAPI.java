@@ -6,20 +6,22 @@ import com.BE.QuitCare.service.AuthenticationService;
 import com.BE.QuitCare.service.CommentService;
 import com.BE.QuitCare.service.CommunityPostService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(
+        name = "API của Admin"
+)
 @RestController
 @SecurityRequirement(name = "api")
 @RequestMapping("/api/admin")
 public class AdminAPI {
     @Autowired
     private AuthenticationService authenticationService;
-    @Autowired
-    private CommunityPostService communityPostService;
     @Autowired
     private CommentService commentService;
 

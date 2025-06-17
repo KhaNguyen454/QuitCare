@@ -4,6 +4,7 @@ import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import com.BE.QuitCare.service.TokenService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 
+@Tag(
+        name = "Đăng nhập bẳng Google"
+)
 @RestController
 @RequestMapping("/api/auth/oauth2")
 @RequiredArgsConstructor
