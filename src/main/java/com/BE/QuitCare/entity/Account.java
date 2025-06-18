@@ -66,8 +66,7 @@ public class Account implements UserDetails {
         return this.password;
     }
 
-    @OneToOne(mappedBy = "account")
-    private SmokingStatus smokingStatus;
+    // Liên kết
 
     @OneToMany(mappedBy = "account")
     @JsonIgnore
@@ -77,9 +76,11 @@ public class Account implements UserDetails {
     @JsonIgnore
     private List<UserMembership> memberships;
 
+    @OneToOne(mappedBy = "account")
+    private SmokingStatus smokingStatus;
 
-
-
+    @OneToOne(mappedBy = "account")
+    private QuitPlan quitPlan;
 
 }
 
