@@ -44,6 +44,4 @@ public class SmokingStatus
     @OneToOne
     @JoinColumn(name = "account_id", unique = true)
     private Account account;
-
-
 }
