@@ -20,5 +20,5 @@ public class CommunityPostDTO {
 
     private CommentStatus status;
 
-    private Date date;
+    private String date;
 }

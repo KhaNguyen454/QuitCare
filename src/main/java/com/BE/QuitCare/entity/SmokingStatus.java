@@ -5,18 +5,16 @@ import com.BE.QuitCare.enums.AccountStatus;
 import com.BE.QuitCare.enums.LongestQuitDuration;
 import com.BE.QuitCare.enums.QuitAttempts;
 import com.BE.QuitCare.enums.TimeToFirstCigarette;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
 @Setter
-public class Smoking_Status
+public class SmokingStatus
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

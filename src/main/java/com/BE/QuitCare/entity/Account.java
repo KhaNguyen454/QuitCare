@@ -67,7 +67,7 @@ public class Account implements UserDetails {
     }
 
     @OneToOne(mappedBy = "account")
-    private Smoking_Status smokingStatus;
+    private SmokingStatus smokingStatus;
 
     @OneToMany(mappedBy = "account")
     @JsonIgnore

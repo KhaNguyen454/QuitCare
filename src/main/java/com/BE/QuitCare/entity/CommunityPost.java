@@ -20,6 +20,8 @@ public class CommunityPost {
 
     private String title;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     private String image;
@@ -29,7 +31,7 @@ public class CommunityPost {
     @Enumerated(EnumType.STRING)
     private CommentStatus status;
 
-    private Date date;
+    private String date;
 
     @OneToMany(mappedBy = "communityPost")
             @JsonIgnore
@@ -38,4 +40,7 @@ public class CommunityPost {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private Account account;
+
+    @Column(nullable = false)
+    private Boolean deleted = false;
 }

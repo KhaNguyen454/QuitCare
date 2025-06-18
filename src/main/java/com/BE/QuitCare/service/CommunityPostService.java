@@ -16,10 +16,10 @@ public class CommunityPostService {
 
 
     @Autowired
-    private CommunityPostRepository repository;
+     CommunityPostRepository repository;
 
     @Autowired
-    private ModelMapper modelMapper;
+     ModelMapper modelMapper;
 
     public List<CommunityPostDTO> getAll() {
         return repository.findAll().stream()
@@ -33,8 +33,14 @@ public class CommunityPostService {
     }
 
     public CommunityPostDTO create(CommunityPostDTO dto) {
-        CommunityPost post = modelMapper.map(dto, CommunityPost.class);
-        return modelMapper.map(repository.save(post), CommunityPostDTO.class);
+        CommunityPost post = new CommunityPost();
+        post.setDescription(dto.getDescription());
+        post.setTitle(dto.getTitle());
+        post.setImage(dto.getImage());
+        post.setStatus(dto.getStatus());
+        post.setDate(dto.getDate());
+        CommunityPost saved = repository.save(post);
+        return modelMapper.map(saved, CommunityPostDTO.class);
     }
 
     public CommunityPostDTO update(Long id, CommunityPostDTO dto) {

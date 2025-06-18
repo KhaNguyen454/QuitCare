@@ -4,6 +4,7 @@ import com.BE.QuitCare.dto.CommunityPostDTO;
 import com.BE.QuitCare.entity.CommunityPost;
 import com.BE.QuitCare.service.CommunityPostService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(
+        name = "Các bài post của hệ thống"
+)
 @RestController
 @RequestMapping("/api/community-posts")
 @SecurityRequirement(name = "api")
