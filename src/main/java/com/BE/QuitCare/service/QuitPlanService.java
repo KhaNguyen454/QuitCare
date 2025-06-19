@@ -261,7 +261,7 @@ public class QuitPlanService {
         }
     }
 
-    @Transactional
+
     private void generateSystemQuitPlanStages(QuitPlan quitPlan, int initialCigarettesPerDay) {
         long currentCigarettes = initialCigarettesPerDay;
         int stageNumber = 1;

@@ -23,8 +23,10 @@ public class Quitprogress
     LocalDate date;
     int cigarettes_smoked;//số điếu hút
 
+    @Enumerated(EnumType.STRING)
     QuitHealthStatus quitHealthStatus;
     int money_saved;
+    @Enumerated(EnumType.STRING)
     QuitProgressStatus quitProgressStatus;
     int point;
 
@@ -34,4 +36,8 @@ public class Quitprogress
 
     @OneToMany(mappedBy = "quitprogress")
     private List<MessageNotification>  messageNotifications;
+
+    @ManyToOne
+    @JoinColumn(name = "smoking_status_id")
+    private SmokingStatus smokingStatus;
 }
