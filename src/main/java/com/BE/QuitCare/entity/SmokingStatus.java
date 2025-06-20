@@ -1,11 +1,7 @@
 package com.BE.QuitCare.entity;
 
 
-import com.BE.QuitCare.enums.AccountStatus;
-import com.BE.QuitCare.enums.LongestQuitDuration;
-import com.BE.QuitCare.enums.QuitAttempts;
-import com.BE.QuitCare.enums.TimeToFirstCigarette;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.BE.QuitCare.enums.*;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +12,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-public class Smoking_Status
+public class SmokingStatus
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,14 +34,36 @@ public class Smoking_Status
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-
     private AccountStatus status;//Có người thân/bạn bè ủng hộ không
+
+    @Column(nullable = false)
+    boolean cravingWithoutSmoking; //Bạn có cảm thấy khó chịu khi không hút thuốc
+
+    @Column(nullable = false)
+    String triggerSituation; // Bạn hút thuốc nhiều hơn khi nào
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    QuitIntentionTimeline quitIntentionTimeline; // Ý định cai thuốc trong bao lâu
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    ReadinessLevel readinessLevel;//Mức độ sẵn sàng cai thuốc
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    QuitReasons quitReasons;//Lý do chính muốn cai thuốc
 
     private LocalDateTime createAt = LocalDateTime.now();
 
+    // Mối quan hệ OneToOne với Account
+    // @JoinColumn định nghĩa cột khóa ngoại (foreign key) trong bảng SmokingStatus
+    // unique = true đảm bảo mỗi Account chỉ có 1 SmokingStatus
     @OneToOne
     @JoinColumn(name = "account_id", unique = true)
     private Account account;
 
+    @OneToMany(mappedBy = "smokingStatus")
+    private List<Quitprogress> quitprogressList;
 
 }

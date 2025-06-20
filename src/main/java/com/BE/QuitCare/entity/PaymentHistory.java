@@ -1,6 +1,7 @@
 package com.BE.QuitCare.entity;
 
 import com.BE.QuitCare.enums.StatusPayment;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,5 +30,4 @@ public class PaymentHistory
     @OneToOne
     @JoinColumn(name = "usermembership_id", unique = true)
     private  UserMembership payment;
-
 }

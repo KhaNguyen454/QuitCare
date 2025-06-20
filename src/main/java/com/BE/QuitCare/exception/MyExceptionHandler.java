@@ -28,6 +28,10 @@ public class MyExceptionHandler {
     public ResponseEntity handAuthenticaitonEcxception(AuthenticationException exception){
         return new ResponseEntity(exception.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity handleBadRequestException(BadRequestException exception){
+        return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 
 }
 

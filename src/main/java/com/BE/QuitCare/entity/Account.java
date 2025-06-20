@@ -72,10 +72,6 @@ public class Account implements UserDetails {
     @JsonIgnore
     List<SessionUser> sessionUsers;
 
-    @OneToMany(mappedBy = "account")
-    @JsonIgnore
-    List<UserMembership>  userMemberships;
-
 
 
 

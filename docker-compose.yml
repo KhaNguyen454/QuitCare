@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Dịch vụ cho ứng dụng Spring Boot
+  quitcare-app:
+    # Build image từ Dockerfile trong thư mục hiện tại
+    build: .
+    container_name: quitcare-app-container
+    # Ánh xạ cổng 8080 của máy bạn vào cổng 8080 của container
+    ports:
+      - "8081:8080"
+    # Khởi động lại container nếu nó bị dừng
+    restart: unless-stopped
+    # Dịch vụ này phụ thuộc và sẽ chờ dịch vụ DB khởi động xong
+    depends_on:
+      - quitcare-db
+    # Cấu hình các biến môi trường để ghi đè application.properties
+    # Đây là cách để kết nối tới container DB
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://quitcare-db:3306/quitcare_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+  # Dịch vụ cho cơ sở dữ liệu MySQL
+  quitcare-db:
+    # Sử dụng image MySQL phiên bản 8.0 chính thức
+    image: mysql:8.0
+    container_name: quitcare-db-container
+    # Cấu hình các biến môi trường cho MySQL
+    environment:
+      MYSQL_DATABASE: quitcare_db # Tên database sẽ được tạo
+      MYSQL_ROOT_PASSWORD: 123456 # Mật khẩu của user 'root'
+    # Ánh xạ cổng 3307 của máy bạn vào cổng 3306 của container
+    # Để bạn có thể kết nối vào DB này từ máy tính bằng tool như DBeaver, DataGrip
+    ports:
+      - "3307:3306"
+    # Gắn một volume để dữ liệu của DB không bị mất khi container bị xóa/tạo lại
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+# Định nghĩa volume để lưu trữ dữ liệu DB
+volumes:
+  db_data:

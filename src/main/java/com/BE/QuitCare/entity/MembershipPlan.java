@@ -1,5 +1,6 @@
 package com.BE.QuitCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,6 @@ public class MembershipPlan
     private LocalDateTime createAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "membership")
+    @JsonIgnore
     List<UserMembership>  memberships;
-
 }

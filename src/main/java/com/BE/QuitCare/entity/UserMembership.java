@@ -1,6 +1,7 @@
 package com.BE.QuitCare.entity;
 
 
+
 import com.BE.QuitCare.enums.StatusMembership;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,9 +9,11 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
+
 @Entity
 @Getter
 @Setter
+
 public class UserMembership
 {
     @Id
@@ -31,5 +34,6 @@ public class UserMembership
 
     @OneToOne(mappedBy = "payment")
     private PaymentHistory paymentHistory;
+
 
 }
