@@ -1,6 +1,10 @@
 package com.BE.QuitCare.api;
 
 import com.BE.QuitCare.dto.*;
+import com.BE.QuitCare.dto.request.QuitPlanCreateRequest;
+import com.BE.QuitCare.dto.request.QuitPlanStageCreateRequest;
+import com.BE.QuitCare.dto.request.QuitPlanStageUpdateRequest;
+import com.BE.QuitCare.dto.request.QuitPlanUpdateRequest;
 import com.BE.QuitCare.service.QuitPlanService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,4 +1,4 @@
-package com.BE.QuitCare.dto;
+package com.BE.QuitCare.dto.request;
 
 import com.BE.QuitCare.enums.Gender;
 import jakarta.validation.constraints.NotBlank;

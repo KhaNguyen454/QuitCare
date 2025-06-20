@@ -1,15 +1,15 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.*;
+import com.BE.QuitCare.dto.request.*;
+import com.BE.QuitCare.dto.response.AccountResponse;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.exception.AuthenticationException;
 import com.BE.QuitCare.repository.AuthenticationRepository;
-import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

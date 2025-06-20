@@ -1,7 +1,6 @@
 package com.BE.QuitCare.api;
 
-import com.BE.QuitCare.dto.AccountDTO;
-import com.BE.QuitCare.dto.UpdateProfileRequest;
+import com.BE.QuitCare.dto.request.UpdateProfileRequest;
 import com.BE.QuitCare.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,13 +1,11 @@
 package com.BE.QuitCare.api;
 
-import com.BE.QuitCare.dto.AccountResponse;
-import com.BE.QuitCare.dto.LoginRequest;
-import com.BE.QuitCare.dto.RegisterRequest;
-import com.BE.QuitCare.dto.UpdateProfileRequest;
+import com.BE.QuitCare.dto.response.AccountResponse;
+import com.BE.QuitCare.dto.request.LoginRequest;
+import com.BE.QuitCare.dto.request.RegisterRequest;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

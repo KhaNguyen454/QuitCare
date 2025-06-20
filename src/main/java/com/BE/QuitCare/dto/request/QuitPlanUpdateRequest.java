@@ -1,6 +1,5 @@
-package com.BE.QuitCare.dto;
+package com.BE.QuitCare.dto.request;
 
-import com.BE.QuitCare.enums.AddictionLevel;
 import com.BE.QuitCare.enums.QuitPlanStatus;
 import lombok.Data;
 

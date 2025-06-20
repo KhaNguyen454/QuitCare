@@ -16,4 +16,7 @@ public class CommentDTO {
     private CommentStatus commentStatus;
 
     private LocalDateTime createAt = LocalDateTime.now();
+
+    private Long communityPostId; // Thêm để biết comment thuộc bài post nào
+    private Long accountId;
 }
