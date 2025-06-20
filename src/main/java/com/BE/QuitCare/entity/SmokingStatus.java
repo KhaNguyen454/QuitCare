@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -61,5 +62,8 @@ public class SmokingStatus
     @OneToOne
     @JoinColumn(name = "account_id", unique = true)
     private Account account;
+
+    @OneToMany(mappedBy = "smokingStatus")
+    private List<Quitprogress> quitprogressList;
 
 }

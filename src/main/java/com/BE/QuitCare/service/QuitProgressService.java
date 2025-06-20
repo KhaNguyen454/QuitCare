@@ -5,6 +5,7 @@ import com.BE.QuitCare.entity.MessageNotification;
 import com.BE.QuitCare.entity.QuitPlanStage;
 import com.BE.QuitCare.entity.Quitprogress;
 import com.BE.QuitCare.enums.MessageTypeStatus;
+import com.BE.QuitCare.enums.QuitHealthStatus;
 import com.BE.QuitCare.enums.QuitProgressStatus;
 import com.BE.QuitCare.repository.MessageNotificationRepository;
 import com.BE.QuitCare.repository.QuitPlanStageRepository;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class QuitProgressService
@@ -28,6 +31,8 @@ public class QuitProgressService
     QuitPlanStageRepository stageRepository;
     @Autowired
     SmokingStatusRepository smokingStatusRepository;
+    @Autowired
+    private QuitProgressRepository quitProgressRepository;
 
     public List<Quitprogress> getAll() {
         return repository.findAll();
@@ -93,7 +98,6 @@ public class QuitProgressService
 
     public MessageNotification generateNotification(Quitprogress quitprogress) {
         int referenceValue = 0;
-
         QuitPlanStage stage = quitprogress.getQuitPlanStage();
         if (stage != null) {
             if (stage.getReductionPercentage() != null) {
@@ -104,12 +108,35 @@ public class QuitProgressService
         }
 
         int point = referenceValue - quitprogress.getCigarettes_smoked();
-        quitprogress.setPoint(point); // Optional if you want to persist this
+        quitprogress.setPoint(point);
 
-        MessageTypeStatus typeStatus = point < 0
-                ? MessageTypeStatus.NOTIFICATION1
-                : MessageTypeStatus.NOTIFICATION2;
+        MessageTypeStatus typeStatus;
 
+        // Base NOTIFICATION1 or 2
+        if (point < 0) {
+            typeStatus = MessageTypeStatus.NOTIFICATION1;
+        } else {
+            typeStatus = MessageTypeStatus.NOTIFICATION2;
+        }
+
+        // ✅ Get last 3 days of Quitprogress records for this user/smokingStatus
+        List<Quitprogress> last3Days = quitProgressRepository
+                .findTop3BySmokingStatusOrderByDateDesc(quitprogress.getSmokingStatus());
+
+        // Check symptom counts
+        Map<QuitHealthStatus, Long> symptomCounts = last3Days.stream()
+                .filter(p -> p.getQuitHealthStatus() != null)
+                .collect(Collectors.groupingBy(Quitprogress::getQuitHealthStatus, Collectors.counting()));
+
+        if (!symptomCounts.isEmpty()) {
+            if (symptomCounts.size() > 2 && last3Days.size() == 3) {
+                typeStatus = MessageTypeStatus.NOTIFICATION4;
+            } else if (symptomCounts.values().stream().anyMatch(count -> count == 3)) {
+                typeStatus = MessageTypeStatus.NOTIFICATION3;
+            }
+        }
+
+        // Get quit reason
         String quitReasonDisplay = "Không rõ lý do.";
         if (quitprogress.getSmokingStatus() != null && quitprogress.getSmokingStatus().getQuitReasons() != null) {
             quitReasonDisplay = switch (quitprogress.getSmokingStatus().getQuitReasons()) {
@@ -121,11 +148,12 @@ public class QuitProgressService
             };
         }
 
-        //  Final notification message
+        // Generate content
         String content = switch (typeStatus) {
             case NOTIFICATION1 -> "Cảnh báo: Số điếu hút hôm nay tăng! Bạn đã quyết định bỏ thuốc " + quitReasonDisplay + ".";
             case NOTIFICATION2 -> "Tuyệt vời! Bạn đã giảm số điếu hút. Hãy nhớ bạn đã bắt đầu " + quitReasonDisplay + ".";
-            default -> "Thông báo.";
+            case NOTIFICATION3 -> "Bạn đã có một triệu chứng kéo dài 3 ngày. Hãy đặt lịch với huấn luyện viên để kiểm tra sức khỏe.";
+            case NOTIFICATION4 -> "Bạn đã có hơn 2 triệu chứng khác nhau trong 3 ngày gần đây. Nên hẹn gặp huấn luyện viên sớm.";
         };
 
         MessageNotification notification = new MessageNotification();
@@ -136,6 +164,7 @@ public class QuitProgressService
 
         return notification;
     }
+
 
 
 
