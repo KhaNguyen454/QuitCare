@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minidev.json.annotate.JsonIgnore;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class MembershipPlan {
     private String name;
     private Double price;
     private String description;
+    //Thời lượng của gói
+    private Duration duration;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     @Column(nullable = false)

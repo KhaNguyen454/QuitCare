@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class CommunityPostDTO {
@@ -21,4 +22,7 @@ public class CommunityPostDTO {
     private CommentStatus status;
 
     private String date;
+    private List<CommentDTO> comments;
+
+    private Long accountId;
 }

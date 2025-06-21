@@ -1,6 +1,10 @@
  package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.*;
+import com.BE.QuitCare.dto.request.QuitPlanCreateRequest;
+import com.BE.QuitCare.dto.request.QuitPlanStageCreateRequest;
+import com.BE.QuitCare.dto.request.QuitPlanStageUpdateRequest;
+import com.BE.QuitCare.dto.request.QuitPlanUpdateRequest;
 import com.BE.QuitCare.entity.*;
 import com.BE.QuitCare.enums.AddictionLevel;
 import com.BE.QuitCare.enums.QuitPlanStatus;

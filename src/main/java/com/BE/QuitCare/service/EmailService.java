@@ -1,7 +1,7 @@
 package com.BE.QuitCare.service;
 
 
-import com.BE.QuitCare.dto.EmailDetail;
+import com.BE.QuitCare.dto.request.EmailDetail;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;

@@ -1,4 +1,4 @@
-package com.BE.QuitCare.dto;
+package com.BE.QuitCare.dto.request;
 
 import lombok.Data;
 
