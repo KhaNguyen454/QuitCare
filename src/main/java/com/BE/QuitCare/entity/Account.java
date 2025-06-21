@@ -12,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class Account implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return this.username;
     }
 
     @Override
@@ -83,5 +84,8 @@ public class Account implements UserDetails {
     @OneToOne(mappedBy = "account")
     private QuitPlan quitPlan;
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<PaymentHistory> paymentHistories = new ArrayList<>();
 }
 
