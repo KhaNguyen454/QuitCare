@@ -22,8 +22,6 @@ import java.util.List;
 public class AdminAPI {
     @Autowired
     private AuthenticationService authenticationService;
-    @Autowired
-    private CommentService commentService;
 
     @GetMapping("/user")
     public ResponseEntity<List<AccountDTO>> getAllAccounts() {

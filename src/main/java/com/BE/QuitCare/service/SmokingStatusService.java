@@ -43,11 +43,19 @@ public class SmokingStatusService
         Account account = authenticationRepository.findById(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
-        SmokingStatus entity = modelMapper.map(dto, SmokingStatus.class);
-        entity.setAccount(account);
+        // Kiểm tra account đã có SmokingStatus chưa
+        if (smokingStatusRepository.findByAccountId(accountId).isPresent()) {
+            throw new IllegalStateException("Account already has a SmokingStatus.");
+        }
 
-        return modelMapper.map(smokingStatusRepository.save(entity), SmokingStatusDTO.class);
+        // Map DTO → entity
+        SmokingStatus entity = modelMapper.map(dto, SmokingStatus.class);
+        entity.setAccount(account); // Gắn với account
+
+        SmokingStatus saved = smokingStatusRepository.save(entity);
+        return modelMapper.map(saved, SmokingStatusDTO.class);
     }
+
 
     public SmokingStatusDTO update(Long id, SmokingStatusDTO dto) {
         return smokingStatusRepository.findById(id)

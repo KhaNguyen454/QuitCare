@@ -2,6 +2,7 @@ package com.BE.QuitCare.entity;
 
 import com.BE.QuitCare.enums.QuitHealthStatus;
 import com.BE.QuitCare.enums.QuitProgressStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,6 +36,7 @@ public class Quitprogress
     private QuitPlanStage quitPlanStage;
 
     @OneToMany(mappedBy = "quitprogress")
+    @JsonIgnore
     private List<MessageNotification>  messageNotifications;
 
     @ManyToOne
