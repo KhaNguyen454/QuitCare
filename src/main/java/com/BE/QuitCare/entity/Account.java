@@ -79,6 +79,7 @@ public class Account implements UserDetails {
     private List<UserMembership> memberships;
 
     @OneToOne(mappedBy = "account")
+    @JsonIgnore
     private SmokingStatus smokingStatus;
 
     @OneToOne(mappedBy = "account")

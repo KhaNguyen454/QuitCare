@@ -27,6 +27,7 @@ public class QuitPlanStage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quit_plan_id", nullable = false)
+    @JsonIgnore
     private QuitPlan quitPlan;
 
     @OneToMany(mappedBy = "quitPlanStage")

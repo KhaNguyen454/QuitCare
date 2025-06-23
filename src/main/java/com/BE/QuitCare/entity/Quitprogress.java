@@ -33,6 +33,7 @@ public class Quitprogress
 
     @ManyToOne
       @JoinColumn(name = "quitPlanStage_id")
+    @JsonIgnore
     private QuitPlanStage quitPlanStage;
 
     @OneToMany(mappedBy = "quitprogress")
