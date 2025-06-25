@@ -84,26 +84,26 @@ public class QuitPlanService {
 
     @Transactional
     public QuitPlanDTO updateQuitPlan(Long accountId, Long quitPlanId, QuitPlanUpdateRequest request) {
+        // 1. Tìm kế hoạch cai nghiện
         QuitPlan quitPlan = quitPlanRepository.findById(quitPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện với ID: " + quitPlanId));
 
-        // Đảm bảo kế hoạch thuộc về tài khoản đã xác thực
+        // 2. Đảm bảo kế hoạch thuộc về tài khoản đã xác thực
         if (!quitPlan.getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền cập nhật kế hoạch cai nghiện này.");
         }
 
-        // Chỉ cho phép cập nhật nếu kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
+        // 3. Chỉ cho phép cập nhật nếu kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
         if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.COMPLETED || quitPlan.getQuitPlanStatus() == QuitPlanStatus.CANCEL) {
             throw new IllegalArgumentException("Không thể cập nhật kế hoạch cai nghiện đã hoàn thành hoặc đã hủy.");
         }
 
-        // Cập nhật trạng thái kế hoạch nếu được cung cấp
+        // 4. Cập nhật trạng thái kế hoạch nếu được cung cấp
         if (request.getQuitPlanStatus() != null) {
-            // Có thể thêm logic kiểm tra chuyển đổi trạng thái hợp lệ (ví dụ: DRAFT -> ACTIVE)
             quitPlan.setQuitPlanStatus(request.getQuitPlanStatus());
         }
 
-        // Xử lý thay đổi loại kế hoạch (Hệ thống <-> Người dùng tự tạo)
+        // 5. Xử lý thay đổi loại kế hoạch (Hệ thống <-> Người dùng tự tạo)
         if (request.getIsSystemPlan() != null && quitPlan.isSystemPlan() != request.getIsSystemPlan()) {
             if (!quitPlan.isSystemPlan() && request.getIsSystemPlan()) { // Chuyển từ người dùng tự tạo sang hệ thống
                 SmokingStatus smokingStatus = smokingStatusRepository.findByAccountId(accountId)
@@ -118,8 +118,7 @@ public class QuitPlanService {
                 quitPlan.setSystemPlan(false);
             }
         }
-
-
+        // 6. Lưu cập nhật và trả về DTO
         return modelMapper.map(quitPlanRepository.save(quitPlan), QuitPlanDTO.class);
     }
 
@@ -285,9 +284,15 @@ public class QuitPlanService {
             long targetForThisStage = (long) Math.floor(currentCigarettes / 2.0);
             long reductionPercentageValue;
 
+            // Mục đích: Tính toán phần trăm giảm từ số lượng điếu thuốc của giai đoạn trước đó đến mục tiêu của giai đoạn hiện tại.
             if (currentCigarettes > 0) {
+                // (currentCigarettes - targetForThisStage) là số điếu thuốc đã giảm.
+                // Chia số này cho currentCigarettes sẽ cho tỷ lệ giảm.
+                // Nhân với 100 và làm tròn sẽ cho phần trăm.
                 reductionPercentageValue = (long) Math.round(((double) (currentCigarettes - targetForThisStage) / currentCigarettes) * 100);
             } else {
+                // Nếu currentCigarettes đã là 0, không có giảm thêm nữa.
+
                 reductionPercentageValue = 0L;
             }
             stage.setReductionPercentage(reductionPercentageValue);

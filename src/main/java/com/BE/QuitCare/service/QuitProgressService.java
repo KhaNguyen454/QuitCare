@@ -140,11 +140,12 @@ public class QuitProgressService
         String quitReasonDisplay = "Không rõ lý do.";
         if (quitprogress.getSmokingStatus() != null && quitprogress.getSmokingStatus().getQuitReasons() != null) {
             quitReasonDisplay = switch (quitprogress.getSmokingStatus().getQuitReasons()) {
-                case HEALTH -> "vì sức khỏe";
-                case FAMILY -> "vì gia đình";
-                case MONEY -> "vì tiết kiệm tiền";
-                case SOCIAL -> "vì xã hội";
-                case OTHER -> "vì lý do khác";
+                case Improving_health -> "vì sức khỏe";
+                case Family_loved_ones -> "vì gia đình";
+                case Financial_pressure -> "vì áp lực tài chính";
+                case Feeling_tired_of_addiction -> "vì cảm thấy mệt mỏi vì nghiện";
+                case Being_banned_from_smoking_at_work_home -> "vì bị cấm hút tại nơi làm việc / gia đình";
+                case Wanting_to_set_an_example_for_children -> "vì muốn làm gương cho con cái";
             };
         }
 

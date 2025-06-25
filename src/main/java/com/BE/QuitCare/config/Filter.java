@@ -2,6 +2,7 @@ package com.BE.QuitCare.config;
 
 
 import com.BE.QuitCare.entity.Account;
+import com.BE.QuitCare.exception.AuthenticationException;
 import com.BE.QuitCare.service.TokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -13,7 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -71,9 +71,7 @@ public class Filter extends OncePerRequestFilter {
             //xác thực
             String token = getToken(request);
             if (token == null) {
-
-                resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
-                });
+                resolver.resolveException(request, response, null, new AuthenticationException("Empty token!"));
                 return;// Dừng xử lý tiếp
             }
 
@@ -86,10 +84,10 @@ public class Filter extends OncePerRequestFilter {
                 account = tokenService.extractAccount(token);
             } catch (ExpiredJwtException expiredJwtException) {
                 // token het han
-                resolver.resolveException(request, response, null, new AuthException("Expired Token!"));
+                resolver.resolveException(request, response, null, new AuthenticationException("Expired Token!"));
                 return;
             } catch (MalformedJwtException malformedJwtException) {
-                resolver.resolveException(request, response, null, new AuthException("Invalid Token!"));
+                resolver.resolveException(request, response, null, new AuthenticationException("Invalid Token!"));
                 return;
             }
             // => token dung
