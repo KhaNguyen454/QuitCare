@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "đăng ký tư vấn"
+        name = "đăng ký lịch làm của bác sĩ"
 )
 @RestController
 @RequestMapping("/api/session")

@@ -4,10 +4,10 @@ package com.BE.QuitCare.entity;
 import com.BE.QuitCare.enums.AccountStatus;
 import com.BE.QuitCare.enums.Gender;
 import com.BE.QuitCare.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

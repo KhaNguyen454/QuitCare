@@ -4,6 +4,7 @@ import com.BE.QuitCare.dto.RegisterSessionDTO;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.Session;
 import com.BE.QuitCare.entity.SessionUser;
+import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.exception.BadRequestException;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import com.BE.QuitCare.repository.SessionRepository;
@@ -33,7 +34,14 @@ public class SessionService
     }
     public List<SessionUser> registerSession(RegisterSessionDTO registerSessionDTO)
     {
-        Account account = authenticationRepository.findById(registerSessionDTO.getAccountId()).get();
+        Account account = authenticationRepository.findById(registerSessionDTO.getAccountId())
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy tài khoản"));
+
+        //  Chỉ cho phép COACH đăng ký lịch
+        if (account.getRole() != Role.COACH) {
+            throw new BadRequestException("Chỉ có Coach mới được đăng ký lịch.");
+        }
+
         List<SessionUser>  sessionUsers = new ArrayList<>();
         List<SessionUser> oldAccountSlot= sessionUserRepository.findAccountSessionsByAccountAndDate(account,registerSessionDTO.getDate());
 
@@ -61,11 +69,11 @@ public class SessionService
         LocalTime end = LocalTime.of(17, 0);
         List<Session> sessions = new ArrayList<>();
 
-        while(start.isBefore(end)) {
+        while(start.plusMinutes(90).compareTo(end) <= 0) {
             Session session = new Session();
+            session.setLable(start.toString());
             session.setStart(start);
-            session.setNotes(start.toString());
-            session.setEnd(start.plusHours(30));
+            session.setEnd(start.plusMinutes(90));
 
             sessions.add(session);
             start = start.plusMinutes(30);
