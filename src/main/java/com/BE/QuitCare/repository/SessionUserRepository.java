@@ -11,4 +11,5 @@ public interface SessionUserRepository extends JpaRepository<SessionUser,Long>
 {
     List<SessionUser> findAccountSessionsByAccountAndDate(Account account, LocalDate date);
 
+    SessionUser findAccountSlotBySessionIdAndAccountAndDate(Long sessionId, Account account, LocalDate date);
 }
