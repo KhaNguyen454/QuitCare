@@ -24,5 +24,7 @@ public class SessionUser
     @JoinColumn(name = "session_id")
     Session session;
 
+    boolean isAvailable = true;
+
 
 }

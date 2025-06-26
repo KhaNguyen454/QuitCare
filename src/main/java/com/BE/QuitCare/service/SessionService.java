@@ -12,6 +12,7 @@ import com.BE.QuitCare.repository.SessionUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,12 @@ public class SessionService
     }
 
     public void generateSession() {
+        LocalDate today = LocalDate.now();
+
+        //  Kiểm tra nếu đã generate rồi trong ngày hôm nay
+        if (sessionRepository.existsByDate(today)) {
+            throw new BadRequestException("Đã tạo lịch cho ngày hôm nay.");
+        }
         //generate tu 7h sang toi 17h
         LocalTime start = LocalTime.of(7, 0);
         LocalTime end = LocalTime.of(17, 0);
