@@ -1,9 +1,7 @@
 package com.BE.QuitCare.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.BE.QuitCare.enums.AppointmentEnum;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,9 +16,11 @@ public class Appointment
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public long id;
 
-
     LocalDate createAt;
+    AppointmentEnum status;
 
-
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    Account account;
 
 }

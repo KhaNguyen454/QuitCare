@@ -88,5 +88,9 @@ public class Account implements UserDetails {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PaymentHistory> paymentHistories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "account")
+    @JsonIgnore
+    List<Appointment> appointments;
 }
 
