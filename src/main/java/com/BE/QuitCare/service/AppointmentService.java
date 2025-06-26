@@ -38,7 +38,8 @@ public class AppointmentService
             throw new BadRequestException("Account is not a Coach");
         }
 
-        SessionUser slot=sessionUserRepository.findAccountSlotBySessionIdAndAccountAndDate(
+
+        SessionUser slot =sessionUserRepository.findAccountSlotBySessionIdAndAccountAndDate(
                 appointmentRequest.getSessionId(),
                 doctor,
                 appointmentRequest.getAppointmentDate()
@@ -49,6 +50,9 @@ public class AppointmentService
         }
 
         Account currentAccount = authenticationService.getCurentAccount();
+        if (currentAccount.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Only customers are allowed to create appointments");
+        }
 
         Appointment appointment=new Appointment();
         appointment.setCreateAt(LocalDate.now());
