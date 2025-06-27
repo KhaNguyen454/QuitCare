@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(
         name = "Booking"
@@ -31,8 +28,20 @@ public class AppointmentAPI
     {
         Appointment appointment = appointmentService.create(appointmentRequest);
         return ResponseEntity.ok().body(appointment);
-
     }
+
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<?> confirmAppointment(@PathVariable Long id) {
+        appointmentService.confirmAppointment(id);
+        return ResponseEntity.ok("Appointment confirmed successfully.");
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelAppointment(@PathVariable Long id) {
+        appointmentService.cancelAppointment(id);
+        return ResponseEntity.ok("Appointment cancelled successfully.");
+    }
+
 
 
 }

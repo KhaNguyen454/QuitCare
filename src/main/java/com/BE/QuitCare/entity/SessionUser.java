@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -25,6 +27,10 @@ public class SessionUser
     Session session;
 
     boolean isAvailable = true;
+
+    @OneToMany(mappedBy = "sessionUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appointment> appointments = new ArrayList<>();
+
 
 
 }

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -57,10 +58,63 @@ public class AppointmentService
         Appointment appointment=new Appointment();
         appointment.setCreateAt(LocalDate.now());
         appointment.setStatus(AppointmentEnum.PENDING);
+        appointment.setExpireAt(LocalDateTime.now().plusHours(2));
         appointment.setAccount(currentAccount);
         appointmentRepository.save(appointment);
         //set slot do thanh da dat
         slot.setAvailable(false);
         return appointment;
+    }
+    @org.springframework.transaction.annotation.Transactional
+    public void confirmAppointment(Long appointmentId) {
+        Account currentCoach = authenticationService.getCurentAccount();
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+
+        // Kiểm tra quyền Coach và sở hữu
+        if (currentCoach.getRole() != Role.COACH ) {
+            throw new SecurityException("Bạn không có quyền xác nhận lịch hẹn này.");
+        }
+
+        // Kiểm tra trạng thái
+        if (appointment.getStatus() != AppointmentEnum.PENDING) {
+            throw new BadRequestException("Lịch hẹn không ở trạng thái chờ xác nhận.");
+        }
+
+        // Kiểm tra thời gian hết hạn
+        if (appointment.getExpireAt().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Lịch hẹn đã hết thời gian chờ xác nhận.");
+        }
+
+        appointment.setStatus(AppointmentEnum.COMPLETED);
+        appointmentRepository.save(appointment);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void cancelAppointment(Long appointmentId) {
+        Account currentCoach = authenticationService.getCurentAccount();
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+
+        if (currentCoach.getRole() != Role.COACH) {
+            throw new SecurityException("Bạn không có quyền hủy lịch hẹn này.");
+        }
+
+        if (appointment.getStatus() != AppointmentEnum.PENDING) {
+            throw new BadRequestException("Chỉ có thể hủy lịch đang chờ xác nhận.");
+        }
+
+        appointment.setStatus(AppointmentEnum.CANCELLED);
+
+        // Mở lại slot
+        SessionUser slot = appointment.getSessionUser();
+        if (slot != null) {
+            slot.setAvailable(true);
+            sessionUserRepository.save(slot);
+        }
+
+        appointmentRepository.save(appointment);
     }
 }

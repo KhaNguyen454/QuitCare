@@ -2,17 +2,22 @@ package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.RegisterSessionDTO;
 import com.BE.QuitCare.entity.Account;
+import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.entity.Session;
 import com.BE.QuitCare.entity.SessionUser;
+import com.BE.QuitCare.enums.AppointmentEnum;
 import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.exception.BadRequestException;
+import com.BE.QuitCare.repository.AppointmentRepository;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import com.BE.QuitCare.repository.SessionRepository;
 import com.BE.QuitCare.repository.SessionUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +32,10 @@ public class SessionService
     AuthenticationRepository authenticationRepository;
     @Autowired
     SessionUserRepository sessionUserRepository;
+    @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private AppointmentRepository appointmentRepository;
 
 
     public List<Session> get()
@@ -87,5 +96,8 @@ public class SessionService
         }
         sessionRepository.saveAll(sessions);
     }
+
+
+
 
 }

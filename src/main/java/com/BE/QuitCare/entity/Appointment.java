@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -19,9 +20,14 @@ public class Appointment
     LocalDate createAt;
     @Enumerated(EnumType.STRING)
     AppointmentEnum status;
+    @Column(name = "expire_at")
+    private LocalDateTime expireAt;
 
     @ManyToOne
     @JoinColumn(name = "account_id")
     Account account;
 
+    @ManyToOne
+    @JoinColumn(name = "session_user_id")
+    private SessionUser sessionUser;
 }
