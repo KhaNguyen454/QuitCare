@@ -60,6 +60,7 @@ public class AppointmentService
         appointment.setStatus(AppointmentEnum.PENDING);
         appointment.setExpireAt(LocalDateTime.now().plusHours(2));
         appointment.setAccount(currentAccount);
+        appointment.setSessionUser(slot);
         appointmentRepository.save(appointment);
         //set slot do thanh da dat
         slot.setAvailable(false);
@@ -91,7 +92,7 @@ public class AppointmentService
         appointmentRepository.save(appointment);
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void cancelAppointment(Long appointmentId) {
         Account currentCoach = authenticationService.getCurentAccount();
 
@@ -117,4 +118,24 @@ public class AppointmentService
 
         appointmentRepository.save(appointment);
     }
+
+    @Transactional
+    public void cancelExpiredAppointments() {
+        List<Appointment> expiredAppointments = appointmentRepository
+                .findAllByStatusAndExpireAtBefore(AppointmentEnum.PENDING, LocalDateTime.now());
+
+        for (Appointment appointment : expiredAppointments) {
+            appointment.setStatus(AppointmentEnum.CANCELLED);
+
+            // Nếu có sessionUser thì set lại slot là available
+            SessionUser sessionUser = appointment.getSessionUser();
+            if (sessionUser != null) {
+                sessionUser.setAvailable(true);
+                sessionUserRepository.save(sessionUser); // Đừng quên lưu lại
+            }
+
+            appointmentRepository.save(appointment);
+        }
+    }
+
 }

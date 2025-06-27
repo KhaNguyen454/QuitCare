@@ -1,5 +1,6 @@
 package com.BE.QuitCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,7 @@ public class SessionUser
     boolean isAvailable = true;
 
     @OneToMany(mappedBy = "sessionUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Appointment> appointments = new ArrayList<>();
 
 

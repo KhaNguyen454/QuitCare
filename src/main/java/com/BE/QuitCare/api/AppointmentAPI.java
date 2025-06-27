@@ -3,7 +3,6 @@ package com.BE.QuitCare.api;
 
 import com.BE.QuitCare.dto.request.AppointmentRequest;
 import com.BE.QuitCare.entity.Appointment;
-import com.BE.QuitCare.repository.AppointmentRepository;
 import com.BE.QuitCare.service.AppointmentService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
