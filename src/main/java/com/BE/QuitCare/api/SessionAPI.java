@@ -7,9 +7,11 @@ import com.BE.QuitCare.service.SessionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(
@@ -23,10 +25,10 @@ public class SessionAPI
     @Autowired
     SessionService sessionService;
     @PostMapping
-    public void generateSession()
-    {
-        sessionService.generateSession();
+    public void generateSession(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        sessionService.generateSession(date);
     }
+
     @GetMapping
     public ResponseEntity getSlots()
     {

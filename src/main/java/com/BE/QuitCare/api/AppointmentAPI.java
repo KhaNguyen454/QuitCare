@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(
         name = "Booking"
 )
@@ -40,7 +42,10 @@ public class AppointmentAPI
         appointmentService.cancelAppointment(id);
         return ResponseEntity.ok("Appointment cancelled successfully.");
     }
-
-
+    @GetMapping("/coach")
+    public ResponseEntity<List<Appointment>> getAppointmentsForCoach() {
+        List<Appointment> appointments = appointmentService.getAppointmentsForCurrentCoach();
+        return ResponseEntity.ok(appointments);
+    }
 
 }

@@ -138,4 +138,17 @@ public class AppointmentService
         }
     }
 
+    public List<Appointment> getAppointmentsForCurrentCoach() {
+        Account coach = authenticationService.getCurentAccount();
+
+        if (coach == null) {
+            throw new IllegalStateException("Không thể lấy thông tin Coach đang đăng nhập.");
+        }
+        if (coach.getRole() != Role.COACH) {
+            throw new BadRequestException("Chỉ Coach mới có thể xem lịch hẹn.");
+        }
+
+        return appointmentRepository.findBySessionUser_Account_IdOrderByCreateAtDesc(coach.getId());
+    }
+
 }

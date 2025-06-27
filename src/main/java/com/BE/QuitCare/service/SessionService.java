@@ -42,62 +42,62 @@ public class SessionService
     {
         return sessionRepository.findAll();
     }
-    public List<SessionUser> registerSession(RegisterSessionDTO registerSessionDTO)
-    {
+    public List<SessionUser> registerSession(RegisterSessionDTO registerSessionDTO) {
         Account account = authenticationRepository.findById(registerSessionDTO.getAccountId())
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy tài khoản"));
 
-        //  Chỉ cho phép COACH đăng ký lịch
         if (account.getRole() != Role.COACH) {
-            throw new BadRequestException("Chỉ có Coach mới được đăng ký lịch.");
+            throw new BadRequestException("Chỉ Coach mới được đăng ký.");
         }
 
-        List<SessionUser>  sessionUsers = new ArrayList<>();
-        List<SessionUser> oldAccountSlot= sessionUserRepository.findAccountSessionsByAccountAndDate(account,registerSessionDTO.getDate());
-
-        if(!oldAccountSlot.isEmpty())
-        {
-            //=> da co lich roi
-            throw new BadRequestException("Đã có lịch");
+        LocalDate date = registerSessionDTO.getDate();
+        List<SessionUser> oldSlots = sessionUserRepository.findAccountSessionsByAccountAndDate(account, date);
+        if (!oldSlots.isEmpty()) {
+            throw new BadRequestException("Đã có lịch trong ngày này.");
         }
 
-        for(Session session : sessionRepository.findAll())
-        {
+        //  Chỉ lấy session đã được tạo đúng ngày đó
+        List<Session> sessions = sessionRepository.findAllByDate(date);
+        if (sessions.isEmpty()) {
+            throw new BadRequestException("Chưa có session nào được tạo cho ngày " + date);
+        }
+
+        List<SessionUser> sessionUsers = new ArrayList<>();
+        for (Session session : sessions) {
             SessionUser sessionUser = new SessionUser();
             sessionUser.setSession(session);
             sessionUser.setAccount(account);
-            sessionUser.setDate(registerSessionDTO.getDate());
+            sessionUser.setDate(date);
             sessionUsers.add(sessionUser);
         }
 
-        return  sessionUserRepository.saveAll(sessionUsers);
+        return sessionUserRepository.saveAll(sessionUsers);
     }
 
-    public void generateSession() {
-        LocalDate today = LocalDate.now();
 
-        //  Kiểm tra nếu đã generate rồi trong ngày hôm nay
-        if (sessionRepository.existsByDate(today)) {
-            throw new BadRequestException("Đã tạo lịch cho ngày hôm nay.");
+    public void generateSession(LocalDate date) {
+        // Kiểm tra nếu đã generate rồi trong ngày được nhập
+        if (sessionRepository.existsByDate(date)) {
+            throw new BadRequestException("Đã tạo lịch cho ngày này rồi.");
         }
-        //generate tu 7h sang toi 17h
+
         LocalTime start = LocalTime.of(7, 0);
         LocalTime end = LocalTime.of(17, 0);
         List<Session> sessions = new ArrayList<>();
 
-        while(start.plusMinutes(90).compareTo(end) <= 0) {
+        while (start.plusMinutes(90).compareTo(end) <= 0) {
             Session session = new Session();
             session.setLable(start.toString());
             session.setStart(start);
             session.setEnd(start.plusMinutes(90));
+            session.setDate(date); //  dùng ngày được nhập
 
             sessions.add(session);
             start = start.plusMinutes(30);
         }
+
         sessionRepository.saveAll(sessions);
     }
-
-
 
 
 }
