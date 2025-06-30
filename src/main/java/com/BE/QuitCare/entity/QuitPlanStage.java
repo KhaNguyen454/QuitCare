@@ -21,7 +21,6 @@ public class QuitPlanStage {
     @Column(nullable = false)
     Long reductionPercentage;
 
-
     @Column(nullable = false)
     Long targetCigarettes;
 

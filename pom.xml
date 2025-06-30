@@ -8,6 +8,7 @@
 		<version>3.5.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+	<packaging>jar</packaging>
 	<groupId>com.BE</groupId>
 	<artifactId>QuitCare</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
