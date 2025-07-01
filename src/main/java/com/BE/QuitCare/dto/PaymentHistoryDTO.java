@@ -22,5 +22,5 @@ public class PaymentHistoryDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userMembershipId;
-    private Long accountId; // <-- THÊM TRƯỜNG NÀY VÀO DTO
+    private Long accountId; // ID của tài khoản liên quan
 }
