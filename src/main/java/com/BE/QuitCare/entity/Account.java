@@ -4,10 +4,10 @@ package com.BE.QuitCare.entity;
 import com.BE.QuitCare.enums.AccountStatus;
 import com.BE.QuitCare.enums.Gender;
 import com.BE.QuitCare.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -79,6 +79,7 @@ public class Account implements UserDetails {
     private List<UserMembership> memberships;
 
     @OneToOne(mappedBy = "account")
+    @JsonIgnore
     private SmokingStatus smokingStatus;
 
     @OneToOne(mappedBy = "account")
@@ -87,5 +88,9 @@ public class Account implements UserDetails {
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PaymentHistory> paymentHistories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "account")
+    @JsonIgnore
+    List<Appointment> appointments;
 }
 

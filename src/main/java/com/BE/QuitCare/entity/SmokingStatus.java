@@ -2,6 +2,7 @@ package com.BE.QuitCare.entity;
 
 
 import com.BE.QuitCare.enums.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,9 +62,11 @@ public class SmokingStatus
     // unique = true đảm bảo mỗi Account chỉ có 1 SmokingStatus
     @OneToOne
     @JoinColumn(name = "account_id", unique = true)
+    @JsonIgnore
     private Account account;
 
     @OneToMany(mappedBy = "smokingStatus")
+    @JsonIgnore
     private List<Quitprogress> quitprogressList;
 
 }

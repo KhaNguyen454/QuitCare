@@ -42,7 +42,7 @@ public class Filter extends OncePerRequestFilter {
     public boolean isPublicAPI(String uri, String method) {//Cat cac API xem API do co public hay khon
         AntPathMatcher matcher = new AntPathMatcher();
 
-         //GET thì cho qua luôn
+        //GET thì cho qua luôn
         if (method.equals("GET")) return true;
 
         return PUBLIC_API.stream().anyMatch(pattern -> {

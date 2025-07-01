@@ -41,9 +41,14 @@ public class SmokingStatusAPI
             @PathVariable Long accountId,
             @RequestBody SmokingStatusDTO dto
     ) {
-        SmokingStatusDTO created = smokingStatusService.create(accountId, dto);
-        return ResponseEntity.status(201).body(created); // HTTP 201 Created
+        try {
+            SmokingStatusDTO created = smokingStatusService.create(accountId, dto);
+            return ResponseEntity.status(201).body(created);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(409).build(); // HTTP 409 Conflict
+        }
     }
+
 
     // Cập nhật
     @PutMapping("/{id}")

@@ -1,10 +1,13 @@
 package com.BE.QuitCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -23,6 +26,13 @@ public class SessionUser
     @ManyToOne
     @JoinColumn(name = "session_id")
     Session session;
+
+    boolean isAvailable = true;
+
+    @OneToMany(mappedBy = "sessionUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Appointment> appointments = new ArrayList<>();
+
 
 
 }

@@ -100,9 +100,7 @@ public class QuitProgressService
         int referenceValue = 0;
         QuitPlanStage stage = quitprogress.getQuitPlanStage();
         if (stage != null) {
-            if (stage.getReductionPercentage() != null) {
-                referenceValue = stage.getReductionPercentage().intValue();
-            } else if (stage.getTargetCigarettes() != null) {
+             if (stage.getTargetCigarettes() != null) {
                 referenceValue = stage.getTargetCigarettes().intValue();
             }
         }

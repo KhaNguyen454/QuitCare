@@ -22,7 +22,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/quit-progress")
 @SecurityRequirement(name = "api")
-public class QuitProgressAPI
+public class  QuitProgressAPI
 {
     @Autowired
     private QuitProgressService service;

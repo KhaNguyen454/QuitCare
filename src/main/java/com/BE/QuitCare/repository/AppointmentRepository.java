@@ -1,0 +1,15 @@
+package com.BE.QuitCare.repository;
+
+import com.BE.QuitCare.entity.Appointment;
+import com.BE.QuitCare.enums.AppointmentEnum;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public interface AppointmentRepository extends JpaRepository<Appointment, Long>
+{
+    List<Appointment> findAllByStatusAndExpireAtBefore(AppointmentEnum status, LocalDateTime time);
+
+    List<Appointment> findBySessionUser_Account_IdOrderByCreateAtDesc(Long coachId);
+}

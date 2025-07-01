@@ -136,29 +136,52 @@ public class QuitPlanService {
 
     @Transactional
     public QuitPlanStageDTO createQuitPlanStage(Long accountId, QuitPlanStageCreateRequest request) {
+        // 1. Kiểm tra kế hoạch cai nghiện có tồn tại không
         QuitPlan quitPlan = quitPlanRepository.findById(request.getQuitPlanId())
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện với ID: " + request.getQuitPlanId()));
 
-        // Đảm bảo kế hoạch thuộc về tài khoản đã xác thực
+        // 2. Kiểm tra quyền sở hữu
         if (!quitPlan.getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền thêm giai đoạn vào kế hoạch cai nghiện này.");
         }
 
-        // Chỉ cho phép thêm giai đoạn nếu đó là kế hoạch do người dùng tự tạo (isSystemPlan = false)
-        // và kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
+        // 3. Kiểm tra trạng thái hợp lệ
         if (quitPlan.isSystemPlan()) {
-            throw new IllegalArgumentException("Không thể thêm trực tiếp giai đoạn vào kế hoạch cai nghiện do hệ thống tạo.");
+            throw new IllegalArgumentException("Không thể thêm giai đoạn vào kế hoạch hệ thống.");
         }
-        if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.COMPLETED || quitPlan.getQuitPlanStatus() == QuitPlanStatus.CANCEL) {
-            throw new IllegalArgumentException("Không thể thêm giai đoạn vào kế hoạch cai nghiện đã hoàn thành hoặc đã hủy.");
+        if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.COMPLETED ||
+                quitPlan.getQuitPlanStatus() == QuitPlanStatus.CANCEL) {
+            throw new IllegalArgumentException("Không thể thêm vào kế hoạch đã hoàn thành hoặc đã hủy.");
         }
 
-        QuitPlanStage stage = modelMapper.map(request, QuitPlanStage.class);
-        stage.setQuitPlan(quitPlan);
-        // Tính toán reductionPercentage dựa trên targetCigarettes mà người dùng nhập và giai đoạn trước/ban đầu
+        // 4. Validate input
+        if (request.getTargetCigarettes() == null) {
+            throw new IllegalArgumentException("Trường 'targetCigarettes' không được để trống.");
+        }
+        if (request.getStageNumber() <= 0) {
+            throw new IllegalArgumentException("Stage number phải lớn hơn 0.");
+        }
+
+        // 5. Tạo stage
+        QuitPlanStage stage = new QuitPlanStage();
+        stage.setStageNumber(request.getStageNumber());
+        stage.setWeek_range(request.getWeek_range());
+        stage.setTargetCigarettes(request.getTargetCigarettes());
+        stage.setQuitPlan(quitPlan); // liên kết kế hoạch
+
+        // 6. Tính toán tỷ lệ giảm
         calculateUserDefinedReductionPercentage(quitPlan, stage);
 
-        return modelMapper.map(quitPlanStageRepository.save(stage), QuitPlanStageDTO.class);
+        // 7. Đảm bảo không bị null để tránh lỗi Hibernate
+        if (stage.getReductionPercentage() == null) {
+            stage.setReductionPercentage(0L);
+        }
+
+        // 8. Lưu vào DB
+        QuitPlanStage savedStage = quitPlanStageRepository.save(stage);
+
+        // 9. Trả kết quả dạng DTO
+        return modelMapper.map(savedStage, QuitPlanStageDTO.class);
     }
 
     public List<QuitPlanStageDTO> getQuitPlanStages(Long accountId, Long quitPlanId) {
@@ -345,6 +368,9 @@ public class QuitPlanService {
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tình trạng hút thuốc cho tài khoản."));
                 previousCigarettes = smokingStatus.getCigarettes_per_day();
             }
+        }
+        if (currentStage.getTargetCigarettes() == null) {
+            throw new IllegalArgumentException("Số điếu thuốc mục tiêu không được để trống.");
         }
 
         if (previousCigarettes > 0) {

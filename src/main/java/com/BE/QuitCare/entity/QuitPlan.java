@@ -2,6 +2,7 @@ package com.BE.QuitCare.entity;
 
 import com.BE.QuitCare.enums.AddictionLevel;
 import com.BE.QuitCare.enums.QuitPlanStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ public class QuitPlan {
     // Mối quan hệ OneToOne với Account (chỉ cho Role CUSTOMER)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", unique = true, nullable = false)
+    @JsonIgnore
     private Account account;
 
     // Mối quan hệ OneToMany với QuitPlanStage
