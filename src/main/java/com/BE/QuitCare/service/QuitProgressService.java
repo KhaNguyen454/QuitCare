@@ -100,6 +100,14 @@ public class QuitProgressService
         messageNotificationRepository.saveAll(notifications);
 
         return saved;
+
+        Account user = quitprogress.getSmokingStatus().getAccount();
+        user.setTotalPoint(user.getTotalPoint() + quitprogress.getPoint());
+        accountRepository.save(user);
+
+        // Check thành tựu
+        userAchievementService.checkAndGenerate(user, quitprogress);
+
     }
 
 
