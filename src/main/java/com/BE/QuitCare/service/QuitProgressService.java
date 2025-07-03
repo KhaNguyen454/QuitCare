@@ -228,9 +228,4 @@ public class QuitProgressService
 
         return notifications;
     }
-
-
-
-
-
 }

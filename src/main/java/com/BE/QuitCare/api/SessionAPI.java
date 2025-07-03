@@ -22,23 +22,18 @@ import java.util.List;
 @SecurityRequirement(name = "api")
 public class SessionAPI
 {
+
     @Autowired
     SessionService sessionService;
-    @PostMapping
-    public void generateSession(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        sessionService.generateSession(date);
+
+    @GetMapping("/templates")
+    public ResponseEntity<List<Session>> getTemplates() {
+        return ResponseEntity.ok(sessionService.getTemplates());
     }
 
-    @GetMapping
-    public ResponseEntity getSlots()
-    {
-        List<Session> sessions = sessionService.get();
-        return ResponseEntity.ok(sessions);
-    }
-    @PostMapping("register")
-    public ResponseEntity registerSession(@RequestBody RegisterSessionDTO registerSessionDTO)
-    {
-        List<SessionUser>  sessionUsers = sessionService.registerSession(registerSessionDTO);
-        return ResponseEntity.ok(sessionUsers);
+    @PostMapping("/register")
+    public ResponseEntity<List<SessionUser>> registerSession(@RequestBody RegisterSessionDTO registerSessionDTO) {
+        List<SessionUser> result = sessionService.registerSession(registerSessionDTO);
+        return ResponseEntity.ok(result);
     }
 }

@@ -19,16 +19,12 @@ public class Session
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "date")
-    private LocalDate date;
-    String lable;
-    LocalTime start;
-    LocalTime end;
+
     boolean isDelete =false;
 
-    @OneToMany(mappedBy = "session")
-    @JsonIgnore
-    List<SessionUser>  sessionUsers;
+    private String label;
+    private LocalTime start;
+    private LocalTime end;
 
     @OneToMany(mappedBy = "session")
     List<FeedbackSession>  feedbackSessions;
