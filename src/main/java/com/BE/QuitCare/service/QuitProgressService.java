@@ -7,10 +7,7 @@ import com.BE.QuitCare.entity.QuitPlanStage;
 import com.BE.QuitCare.entity.Quitprogress;
 import com.BE.QuitCare.enums.*;
 import com.BE.QuitCare.exception.BadRequestException;
-import com.BE.QuitCare.repository.MessageNotificationRepository;
-import com.BE.QuitCare.repository.QuitPlanStageRepository;
-import com.BE.QuitCare.repository.QuitProgressRepository;
-import com.BE.QuitCare.repository.SmokingStatusRepository;
+import com.BE.QuitCare.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +33,10 @@ public class QuitProgressService
     private QuitProgressRepository quitProgressRepository;
     @Autowired
     AuthenticationService authenticationService;
+    @Autowired
+    AuthenticationRepository  authenticationRepository;
+    @Autowired
+    UserAchievementService  userAchievementService;
 
     public List<Quitprogress> getAll() {
         return repository.findAll();
@@ -99,15 +100,15 @@ public class QuitProgressService
         List<MessageNotification> notifications = generateNotifications(saved);
         messageNotificationRepository.saveAll(notifications);
 
-        return saved;
 
         Account user = quitprogress.getSmokingStatus().getAccount();
         user.setTotalPoint(user.getTotalPoint() + quitprogress.getPoint());
-        accountRepository.save(user);
+        authenticationRepository.save(user);
 
-        // Check thành tựu
-        userAchievementService.checkAndGenerate(user, quitprogress);
+        // Kiểm tra & tạo thành tựu
+        userAchievementService.checkAndGenerate(user, saved);
 
+        return saved;
     }
 
 

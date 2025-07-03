@@ -34,6 +34,9 @@ public class Account implements UserDetails {
     private String password;
 
     private String username;
+    @Column(nullable = false)
+    private Integer totalPoint = 0;
+    private String avatar;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -68,35 +71,33 @@ public class Account implements UserDetails {
         return this.password;
     }
 
+    @OneToMany(mappedBy = "account")
+    @JsonIgnore
+    private List<UserAchievement> achievements;
     // Liên kết
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account")
     @JsonIgnore
-    List<SessionUser> sessionUsers = new ArrayList<>();
+    List<SessionUser> sessionUsers;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account")
     @JsonIgnore
-    private List<UserMembership> memberships = new ArrayList<>();
+    private List<UserMembership> memberships;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "account")
+    @JsonIgnore
     private SmokingStatus smokingStatus;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "account")
     private QuitPlan quitPlan;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<PaymentHistory> paymentHistories = new ArrayList<>();
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToMany(mappedBy = "account")
     @JsonIgnore
-    private List<CommunityPost> communityPosts = new ArrayList<>();
-
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Comment> comments = new ArrayList<>();
-
-    public Account() {}
-
+    List<Appointment> appointments;
 }
 
