@@ -34,8 +34,10 @@ public class Account implements UserDetails {
     private String password;
 
     private String username;
+
     @Column(nullable = false)
     private Integer totalPoint = 0;
+
     private String avatar;
 
     @Enumerated(EnumType.STRING)
