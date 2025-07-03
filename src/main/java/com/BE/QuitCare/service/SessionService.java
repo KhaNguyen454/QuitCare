@@ -1,6 +1,7 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.RegisterSessionDTO;
+import com.BE.QuitCare.dto.RemoveSessionDTO;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.entity.Session;
@@ -91,5 +92,26 @@ public class SessionService
             sessionRepository.saveAll(templates);
         }
     }
+
+    @Transactional
+    public void removeSession(RemoveSessionDTO dto) {
+        Account account = authenticationRepository.findById(dto.getAccountId())
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy tài khoản"));
+
+        if (account.getRole() != Role.COACH) {
+            throw new BadRequestException("Chỉ Coach mới được hủy session.");
+        }
+
+        SessionUser sessionUser = sessionUserRepository
+                .findByAccountAndDateAndStart(account, dto.getDate(), dto.getStartTime())
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy session phù hợp."));
+
+        if (!sessionUser.getAppointments().isEmpty()) {
+            throw new BadRequestException("Không thể hủy session đã có cuộc hẹn.");
+        }
+
+        sessionUserRepository.delete(sessionUser);
+    }
+
 
 }
