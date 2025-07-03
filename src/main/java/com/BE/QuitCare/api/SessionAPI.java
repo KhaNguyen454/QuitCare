@@ -32,15 +32,11 @@ public class SessionAPI
         return ResponseEntity.ok(sessionService.getTemplates());
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<List<SessionUser>> registerSession(@RequestBody RegisterSessionDTO registerSessionDTO) {
-        List<SessionUser> result = sessionService.registerSession(registerSessionDTO);
-        return ResponseEntity.ok(result);
+    @DeleteMapping("/remove-day")
+    public ResponseEntity<String> removeWorkingDay(@RequestBody RemoveSessionDTO dto) {
+        sessionService.removeWorkingDay(dto);
+        return ResponseEntity.ok("Đã xin nghỉ thành công cho ngày " + dto.getDate());
     }
-    @DeleteMapping("/remove")
-    public ResponseEntity<String> removeSession(@RequestBody RemoveSessionDTO dto) {
-        sessionService.removeSession(dto);
-        return ResponseEntity.ok("Đã hủy session thành công.");
-    }
+
 
 }

@@ -39,38 +39,7 @@ public class SessionService
         return sessionRepository.findAll();
     }
 
-    public List<SessionUser> registerSession(RegisterSessionDTO dto) {
-        Account account = authenticationRepository.findById(dto.getAccountId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy tài khoản"));
 
-        if (account.getRole() != Role.COACH) {
-            throw new BadRequestException("Chỉ Coach mới được đăng ký.");
-        }
-
-        LocalDate date = dto.getDate();
-        List<SessionUser> old = sessionUserRepository.findAccountSessionsByAccountAndDate(account, date);
-        if (!old.isEmpty()) {
-            throw new BadRequestException("Đã có lịch trong ngày này.");
-        }
-
-        List<Session> templates = sessionRepository.findAll();
-        if (templates.isEmpty()) {
-            throw new BadRequestException("Chưa có khung giờ mẫu.");
-        }
-
-        List<SessionUser> sessionUsers = new ArrayList<>();
-        for (Session template : templates) {
-            SessionUser su = new SessionUser();
-            su.setAccount(account);
-            su.setDate(date);
-            su.setStart(template.getStart());
-            su.setEnd(template.getEnd());
-            su.setLabel(template.getLabel());
-            sessionUsers.add(su);
-        }
-
-        return sessionUserRepository.saveAll(sessionUsers);
-    }
 
     @PostConstruct
     public void initTemplates() {
@@ -94,24 +63,48 @@ public class SessionService
     }
 
     @Transactional
-    public void removeSession(RemoveSessionDTO dto) {
+    public void removeWorkingDay(RemoveSessionDTO dto) {
         Account account = authenticationRepository.findById(dto.getAccountId())
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy tài khoản"));
 
         if (account.getRole() != Role.COACH) {
-            throw new BadRequestException("Chỉ Coach mới được hủy session.");
+            throw new BadRequestException("Chỉ Coach mới được hủy lịch làm.");
         }
 
-        SessionUser sessionUser = sessionUserRepository
-                .findByAccountAndDateAndStart(account, dto.getDate(), dto.getStartTime())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy session phù hợp."));
-
-        if (!sessionUser.getAppointments().isEmpty()) {
-            throw new BadRequestException("Không thể hủy session đã có cuộc hẹn.");
+        List<SessionUser> sessions = sessionUserRepository.findByAccountAndDate(account, dto.getDate());
+        if (sessions.isEmpty()) {
+            throw new BadRequestException("Không có lịch làm nào trong ngày này để hủy.");
         }
 
-        sessionUserRepository.delete(sessionUser);
+        for (SessionUser su : sessions) {
+            if (!su.getAppointments().isEmpty()) {
+                throw new BadRequestException("Không thể xin nghỉ nếu đã có lịch hẹn trong ngày này.");
+            }
+        }
+
+        sessionUserRepository.deleteAll(sessions);
     }
+
+    public void ensureSessionForCoachOnDate(Account coach, LocalDate date) {
+        List<SessionUser> sessions = sessionUserRepository.findByAccountAndDate(coach, date);
+        if (!sessions.isEmpty()) return;
+
+        List<Session> templates = sessionRepository.findAll();
+        List<SessionUser> newSessions = new ArrayList<>();
+
+        for (Session template : templates) {
+            SessionUser su = new SessionUser();
+            su.setAccount(coach);
+            su.setDate(date);
+            su.setStart(template.getStart());
+            su.setEnd(template.getEnd());
+            su.setLabel(template.getLabel());
+            newSessions.add(su);
+        }
+
+        sessionUserRepository.saveAll(newSessions);
+    }
+
 
 
 }

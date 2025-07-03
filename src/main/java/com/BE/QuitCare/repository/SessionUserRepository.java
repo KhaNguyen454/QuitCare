@@ -11,10 +11,8 @@ import java.util.Optional;
 
 public interface SessionUserRepository extends JpaRepository<SessionUser,Long>
 {
-    List<SessionUser> findAccountSessionsByAccountAndDate(Account account, LocalDate date);
-
-    SessionUser findAccountSlotBySessionIdAndAccountAndDate(Long sessionId, Account account, LocalDate date);
-
     Optional<SessionUser> findByAccountAndDateAndStart(Account account, LocalDate date, LocalTime start);
+
+    List<SessionUser> findByAccountAndDate(Account account, LocalDate date);
 
 }

@@ -29,24 +29,27 @@ public class AppointmentService
     AuthenticationService authenticationService;
     @Autowired
     AuthenticationRepository authenticationRepository;
+    @Autowired
+    SessionService sessionService;
 
     @Transactional
     public Appointment create(AppointmentRequest appointmentRequest) {
-        Account doctor = authenticationRepository.findById(appointmentRequest.getCoachId()).orElseThrow(()-> new BadRequestException("Coach not found"));
+        Account doctor = authenticationRepository.findById(appointmentRequest.getCoachId())
+                .orElseThrow(() -> new BadRequestException("Coach not found"));
 
-        if(doctor.getRole() != (Role.COACH))
-        {
+        if (doctor.getRole() != Role.COACH) {
             throw new BadRequestException("Account is not a Coach");
         }
+        sessionService.ensureSessionForCoachOnDate(doctor, appointmentRequest.getAppointmentDate());
 
 
-        SessionUser slot =sessionUserRepository.findAccountSlotBySessionIdAndAccountAndDate(
-                appointmentRequest.getSessionId(),
+        SessionUser slot = sessionUserRepository.findByAccountAndDateAndStart(
                 doctor,
-                appointmentRequest.getAppointmentDate()
-        );
-        if(!slot.isAvailable())
-        {
+                appointmentRequest.getAppointmentDate(),
+                appointmentRequest.getStartTime()
+        ).orElseThrow(() -> new BadRequestException("Không tìm thấy slot phù hợp"));
+
+        if (!slot.isAvailable()) {
             throw new BadRequestException("Slot is not available");
         }
 
@@ -55,17 +58,18 @@ public class AppointmentService
             throw new BadRequestException("Only customers are allowed to create appointments");
         }
 
-        Appointment appointment=new Appointment();
+        Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
         appointment.setStatus(AppointmentEnum.PENDING);
         appointment.setExpireAt(LocalDateTime.now().plusHours(2));
         appointment.setAccount(currentAccount);
         appointment.setSessionUser(slot);
         appointmentRepository.save(appointment);
-        //set slot do thanh da dat
+
         slot.setAvailable(false);
         return appointment;
     }
+
     @Transactional
     public void confirmAppointment(Long appointmentId) {
         Account currentCoach = authenticationService.getCurentAccount();
