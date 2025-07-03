@@ -26,6 +26,9 @@ public class VNPAYService {
         vnp_Params.put("vnp_Version", vnp_Version);
         vnp_Params.put("vnp_Command", vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        // --- THÊM DÒNG LOG NÀY ĐỂ KIỂM TRA GIÁ TRỊ 'amount' TRƯỚC KHI NHÂN 100 ---
+        System.out.println("VNPAYService nhận amount (giá gốc): " + amount);
+        // --- KẾT THÚC DÒNG LOG ---
         vnp_Params.put("vnp_Amount", String.valueOf(amount*100));
         vnp_Params.put("vnp_CurrCode", "VND");
 

@@ -35,6 +35,12 @@ public class SmokingStatusAPI
         return (dto != null) ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/account/{accountId}")
+    public ResponseEntity<SmokingStatusDTO> getByAccountId(@PathVariable Long accountId){
+        SmokingStatusDTO dto = smokingStatusService.getSmokingStatusByAccountId(accountId);
+        return ResponseEntity.ok(dto);
+    }
+
     // Tạo mới (gắn với Account)
     @PostMapping("/account/{accountId}")
     public ResponseEntity<SmokingStatusDTO> create(

@@ -85,9 +85,10 @@ public class Account implements UserDetails {
     @OneToOne(mappedBy = "account")
     private QuitPlan quitPlan;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<PaymentHistory> paymentHistories = new ArrayList<>();
+
 
     @OneToMany(mappedBy = "account")
     @JsonIgnore
