@@ -7,7 +7,8 @@ import java.time.Duration;
 
 @Getter
 @Setter
-public class MembershipPlanDTO {
+public class
+MembershipPlanDTO {
     private Long id;
     private String name;
     private Long price;
