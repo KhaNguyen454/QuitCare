@@ -1,12 +1,12 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.QuitProgressDTO;
+import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.MessageNotification;
 import com.BE.QuitCare.entity.QuitPlanStage;
 import com.BE.QuitCare.entity.Quitprogress;
-import com.BE.QuitCare.enums.MessageTypeStatus;
-import com.BE.QuitCare.enums.QuitHealthStatus;
-import com.BE.QuitCare.enums.QuitProgressStatus;
+import com.BE.QuitCare.enums.*;
+import com.BE.QuitCare.exception.BadRequestException;
 import com.BE.QuitCare.repository.MessageNotificationRepository;
 import com.BE.QuitCare.repository.QuitPlanStageRepository;
 import com.BE.QuitCare.repository.QuitProgressRepository;
@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +34,8 @@ public class QuitProgressService
     SmokingStatusRepository smokingStatusRepository;
     @Autowired
     private QuitProgressRepository quitProgressRepository;
+    @Autowired
+    AuthenticationService authenticationService;
 
     public List<Quitprogress> getAll() {
         return repository.findAll();
@@ -43,32 +46,62 @@ public class QuitProgressService
     }
 
     public Quitprogress create(QuitProgressDTO dto) {
+
+        Account coach = authenticationService.getCurentAccount();
+
+        if (coach.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Chỉ Customer mới có thể khai báo.");
+        }
+        // ===== CHẶN trùng ngày =====
+        if (dto.getSmokingStatusId() != null && dto.getDate() != null) {
+            boolean exists = repository.existsBySmokingStatus_IdAndDate(dto.getSmokingStatusId(), dto.getDate());
+            if (exists) {
+                throw new IllegalArgumentException("Bạn đã khai báo tiến trình trong ngày này rồi.");
+            }
+        }
+
         Quitprogress quitprogress = new Quitprogress();
         quitprogress.setDate(dto.getDate());
         quitprogress.setCigarettes_smoked(dto.getCigarettes_smoked());
-        quitprogress.setMoney_saved(dto.getMoney_saved());
         quitprogress.setQuitHealthStatus(dto.getQuitHealthStatus());
         quitprogress.setQuitProgressStatus(dto.getQuitProgressStatus());
 
-        // Set QuitPlanStage
+        // ===== Lấy QuitPlanStage =====
+        QuitPlanStage stage = null;
         if (dto.getQuitPlanStageId() != null) {
-            stageRepository.findById(dto.getQuitPlanStageId())
-                    .ifPresent(quitprogress::setQuitPlanStage);
+            stage = stageRepository.findById(dto.getQuitPlanStageId()).orElse(null);
+            quitprogress.setQuitPlanStage(stage);
         }
 
-        // Set SmokingStatus
+        // ===== Lấy SmokingStatus =====
         if (dto.getSmokingStatusId() != null) {
             smokingStatusRepository.findById(dto.getSmokingStatusId())
                     .ifPresent(quitprogress::setSmokingStatus);
         }
 
-        // Save and generate notification
+        // ===== TÍNH POINT & MONEY_SAVED =====
+        int referenceValue = 0;
+        if (stage != null && stage.getTargetCigarettes() != null) {
+            referenceValue = stage.getTargetCigarettes().intValue();
+        }
+
+        int rawPoint = referenceValue - quitprogress.getCigarettes_smoked();
+        int point = Math.max(rawPoint, 0) * 10;
+        quitprogress.setPoint(point);
+
+        int moneySaved = Math.max(rawPoint, 0) * 1000;
+        quitprogress.setMoney_saved(moneySaved);
+
+        // ===== LƯU Quitprogress =====
         Quitprogress saved = repository.save(quitprogress);
-        MessageNotification notification = generateNotification(saved);
-        messageNotificationRepository.save(notification);
+
+        // ===== GỘP logic sinh thông báo luôn ở đây =====
+        List<MessageNotification> notifications = generateNotifications(saved);
+        messageNotificationRepository.saveAll(notifications);
 
         return saved;
     }
+
 
 
     public Quitprogress update(Long id, Quitprogress updated) {
@@ -84,57 +117,40 @@ public class QuitProgressService
         }).orElse(null);
     }
 
-    public boolean markAsMissed(Long id) {
-        return repository.findById(id).map(progress -> {
-            if (progress.getQuitProgressStatus() != QuitProgressStatus.MISSED) {
-                progress.setQuitProgressStatus(QuitProgressStatus.MISSED);
-                repository.save(progress);
-                return true;
-            }
-            return false;
-        }).orElse(false);
+    public Quitprogress checkAndMarkMissed(Long smokingStatusId, LocalDate date) {
+        boolean exists = quitProgressRepository.existsBySmokingStatus_IdAndDate(smokingStatusId, date);
+        if (!exists) {
+            Quitprogress missed = new Quitprogress();
+            missed.setDate(date);
+            missed.setCigarettes_smoked(0);
+            missed.setQuitProgressStatus(QuitProgressStatus.MISSED);
+            missed.setQuitHealthStatus(null);
+            missed.setPoint(0);
+            missed.setMoney_saved(0);
+
+            // Gán SmokingStatus
+            smokingStatusRepository.findById(smokingStatusId).ifPresent(missed::setSmokingStatus);
+
+            return repository.save(missed);
+        }
+        return null; // đã có bản ghi
     }
 
 
-    public MessageNotification generateNotification(Quitprogress quitprogress) {
+
+    public List<MessageNotification> generateNotifications(Quitprogress quitprogress) {
+        List<MessageNotification> notifications = new ArrayList<>();
+
+        // 1. Tính điểm
         int referenceValue = 0;
         QuitPlanStage stage = quitprogress.getQuitPlanStage();
-        if (stage != null) {
-             if (stage.getTargetCigarettes() != null) {
-                referenceValue = stage.getTargetCigarettes().intValue();
-            }
+        if (stage != null && stage.getTargetCigarettes() != null) {
+            referenceValue = stage.getTargetCigarettes().intValue();
         }
 
         int point = referenceValue - quitprogress.getCigarettes_smoked();
-        quitprogress.setPoint(point);
 
-        MessageTypeStatus typeStatus;
-
-        // Base NOTIFICATION1 or 2
-        if (point < 0) {
-            typeStatus = MessageTypeStatus.NOTIFICATION1;
-        } else {
-            typeStatus = MessageTypeStatus.NOTIFICATION2;
-        }
-
-        // ✅ Get last 3 days of Quitprogress records for this user/smokingStatus
-        List<Quitprogress> last3Days = quitProgressRepository
-                .findTop3BySmokingStatusOrderByDateDesc(quitprogress.getSmokingStatus());
-
-        // Check symptom counts
-        Map<QuitHealthStatus, Long> symptomCounts = last3Days.stream()
-                .filter(p -> p.getQuitHealthStatus() != null)
-                .collect(Collectors.groupingBy(Quitprogress::getQuitHealthStatus, Collectors.counting()));
-
-        if (!symptomCounts.isEmpty()) {
-            if (symptomCounts.size() > 2 && last3Days.size() == 3) {
-                typeStatus = MessageTypeStatus.NOTIFICATION4;
-            } else if (symptomCounts.values().stream().anyMatch(count -> count == 3)) {
-                typeStatus = MessageTypeStatus.NOTIFICATION3;
-            }
-        }
-
-        // Get quit reason
+        // 2. Lý do bỏ thuốc
         String quitReasonDisplay = "Không rõ lý do.";
         if (quitprogress.getSmokingStatus() != null && quitprogress.getSmokingStatus().getQuitReasons() != null) {
             quitReasonDisplay = switch (quitprogress.getSmokingStatus().getQuitReasons()) {
@@ -147,22 +163,63 @@ public class QuitProgressService
             };
         }
 
-        // Generate content
-        String content = switch (typeStatus) {
-            case NOTIFICATION1 -> "Cảnh báo: Số điếu hút hôm nay tăng! Bạn đã quyết định bỏ thuốc " + quitReasonDisplay + ".";
-            case NOTIFICATION2 -> "Tuyệt vời! Bạn đã giảm số điếu hút. Hãy nhớ bạn đã bắt đầu " + quitReasonDisplay + ".";
-            case NOTIFICATION3 -> "Bạn đã có một triệu chứng kéo dài 3 ngày. Hãy đặt lịch với huấn luyện viên để kiểm tra sức khỏe.";
-            case NOTIFICATION4 -> "Bạn đã có hơn 2 triệu chứng khác nhau trong 3 ngày gần đây. Nên hẹn gặp huấn luyện viên sớm.";
-        };
+        // 3. Tạo thông báo NOTIFICATION2 nếu giảm được thuốc
+        if (point > 0) {
+            MessageNotification n2 = new MessageNotification();
+            n2.setQuitprogress(quitprogress);
+            n2.setSend_at(LocalDate.now());
+            n2.setMessageTypeStatus(MessageTypeStatus.NOTIFICATION2);
+            n2.setMessageStatus(MessageStatus.NORMAL);
+            n2.setContent("Tuyệt vời! Bạn đã giảm số điếu hút. Hãy nhớ bạn đã bắt đầu " + quitReasonDisplay + ".");
+            notifications.add(n2);
+        }
+        if (point < 0) {
+            MessageNotification n1 = new MessageNotification();
+            n1.setQuitprogress(quitprogress);
+            n1.setSend_at(LocalDate.now());
+            n1.setMessageTypeStatus(MessageTypeStatus.NOTIFICATION1);
+            n1.setMessageStatus(MessageStatus.WARNING);
+            n1.setContent("Cảnh báo: Số điếu hút hôm nay tăng! Bạn đã quyết định bỏ thuốc " + quitReasonDisplay + ".");
+            notifications.add(n1);
+        }
 
-        MessageNotification notification = new MessageNotification();
-        notification.setQuitprogress(quitprogress);
-        notification.setSend_at(LocalDate.now());
-        notification.setMessageTypeStatus(typeStatus);
-        notification.setContent(content);
 
-        return notification;
+        // 4. Lấy 3 ngày gần nhất của người dùng
+        List<Quitprogress> last3Days = quitProgressRepository
+                .findTop3BySmokingStatusOrderByDateDesc(quitprogress.getSmokingStatus());
+
+        // 5. Tính số triệu chứng và số lần xuất hiện
+        Map<QuitHealthStatus, Long> symptomCounts = last3Days.stream()
+                .filter(p -> p.getQuitHealthStatus() != null)
+                .collect(Collectors.groupingBy(Quitprogress::getQuitHealthStatus, Collectors.counting()));
+
+        if (!symptomCounts.isEmpty() && last3Days.size() == 3) {
+            // NOTIFICATION4: hơn 2 triệu chứng khác nhau trong 3 ngày
+            if (symptomCounts.size() > 2) {
+                MessageNotification n4 = new MessageNotification();
+                n4.setQuitprogress(quitprogress);
+                n4.setSend_at(LocalDate.now());
+                n4.setMessageTypeStatus(MessageTypeStatus.NOTIFICATION4);
+                n4.setMessageStatus(MessageStatus.WARNING);
+                n4.setContent("Bạn đã có hơn 2 triệu chứng khác nhau trong 3 ngày gần đây. Nên hẹn gặp huấn luyện viên sớm.");
+                notifications.add(n4);
+            }
+
+            // NOTIFICATION3: 1 triệu chứng duy nhất lặp lại 3 ngày
+            if (symptomCounts.values().stream().anyMatch(count -> count == 3)) {
+                MessageNotification n3 = new MessageNotification();
+                n3.setQuitprogress(quitprogress);
+                n3.setSend_at(LocalDate.now());
+                n3.setMessageTypeStatus(MessageTypeStatus.NOTIFICATION3);
+                n3.setMessageStatus(MessageStatus.WARNING);
+                n3.setContent("Bạn đã có một triệu chứng kéo dài 3 ngày. Hãy đặt lịch với huấn luyện viên để kiểm tra sức khỏe.");
+                notifications.add(n3);
+            }
+        }
+
+        return notifications;
     }
+
 
 
 

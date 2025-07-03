@@ -24,8 +24,9 @@ public class MessageNotificationService
         return repository.findAll().stream().map(this::convertToDTO).toList();
     }
 
-    public MessageNotificationDTO getById(Long id) {
-        return repository.findById(id).map(this::convertToDTO).orElse(null);
+    public List<MessageNotificationDTO> getByProgressId(Long progressId) {
+        List<MessageNotification> list = repository.findByQuitprogress_Id(progressId);
+        return list.stream().map(this::convertToDTO).toList();
     }
 
     public MessageNotificationDTO create(MessageNotificationDTO dto) {

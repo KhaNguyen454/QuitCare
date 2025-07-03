@@ -36,14 +36,18 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/auth/register",
             "POST:/api/auth/login",
             "GET:/api/auth/oauth2/login/success",
-            "GET:/oauth2/**"
+            "GET:/oauth2/**",
+            "GET:/swagger-ui/**",       //  thêm dòng này
+            "GET:/v3/api-docs/**",      //  thêm nếu dùng OpenAPI 3
+            "GET:/swagger-resources/**" //  thêm nếu Swagger yêu cầu
     );
 
-    public boolean isPublicAPI(String uri, String method) {//Cat cac API xem API do co public hay khon
+
+    public boolean isPublicAPI(String uri, String method) {
         AntPathMatcher matcher = new AntPathMatcher();
 
-        //GET thì cho qua luôn
-        if (method.equals("GET")) return true;
+        // BỎ dòng này đi:
+        // if (method.equals("GET")) return true;
 
         return PUBLIC_API.stream().anyMatch(pattern -> {
             String[] parts = pattern.split(":", 2);
@@ -55,6 +59,7 @@ public class Filter extends OncePerRequestFilter {
             return method.equalsIgnoreCase(allowedMethod) && matcher.match(allowedUri, uri);
         });
     }
+
 
 
     @Override

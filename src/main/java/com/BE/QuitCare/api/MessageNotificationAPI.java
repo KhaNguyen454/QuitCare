@@ -27,11 +27,12 @@ public class MessageNotificationAPI
         return ResponseEntity.ok(service.getAll());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<MessageNotificationDTO> getById(@PathVariable Long id) {
-        MessageNotificationDTO dto = service.getById(id);
-        return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
+    @GetMapping("/by-progress/{progressId}")
+    public ResponseEntity<List<MessageNotificationDTO>> getByProgressId(@PathVariable Long progressId) {
+        List<MessageNotificationDTO> result = service.getByProgressId(progressId);
+        return ResponseEntity.ok(result);
     }
+
 
     @PostMapping
     public ResponseEntity<MessageNotificationDTO> create(@RequestBody MessageNotificationDTO dto) {

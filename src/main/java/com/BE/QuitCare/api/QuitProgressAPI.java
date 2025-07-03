@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,20 +55,31 @@ public class  QuitProgressAPI
         Quitprogress result = service.update(id, updated);
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
     }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> markAsMissed(@PathVariable Long id) {
-        boolean updated = service.markAsMissed(id);
-        return updated ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    @GetMapping("/check-missed")
+    public ResponseEntity<?> checkMissed(
+            @RequestParam Long smokingStatusId,
+            @RequestParam String date // ISO: yyyy-MM-dd
+    ) {
+        LocalDate localDate = LocalDate.parse(date);
+        Quitprogress result = service.checkAndMarkMissed(smokingStatusId, localDate);
+
+        if (result == null) {
+            return ResponseEntity.ok("Đã có bản ghi trong ngày, không cần đánh dấu missed.");
+        }
+        return ResponseEntity.ok("Đã đánh dấu missed cho ngày " + date);
     }
 
+
     @PostMapping("/generate-notification/{progressId}")
-    public ResponseEntity<MessageNotification> generateNotification(@PathVariable Long progressId) {
+    public ResponseEntity<List<MessageNotification>> generateNotification(@PathVariable Long progressId) {
         Optional<Quitprogress> progressOpt = quitProgressRepository.findById(progressId);
         if (progressOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        MessageNotification notification = service.generateNotification(progressOpt.get());
-        return ResponseEntity.ok(messageNotificationRepository.save(notification));
+        List<MessageNotification> notifications = service.generateNotifications(progressOpt.get());
+        List<MessageNotification> saved = messageNotificationRepository.saveAll(notifications);
+        return ResponseEntity.ok(saved);
     }
+
 
 }
