@@ -1,11 +1,7 @@
 package com.BE.QuitCare.service;
 
-// Đặt trong thư mục package com.BE.QuitCare.service;
-
 import com.BE.QuitCare.dto.PaymentHistoryDTO;
-import com.BE.QuitCare.entity.PaymentHistory;
 import com.BE.QuitCare.repository.PaymentHistoryRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

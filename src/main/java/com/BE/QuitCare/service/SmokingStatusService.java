@@ -39,6 +39,12 @@ public class SmokingStatusService
                 .orElse(null);
     }
 
+    public SmokingStatusDTO getSmokingStatusByAccountId(Long accountId) {
+        SmokingStatus smokingStatus = smokingStatusRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thông tin tình trạng hút thuốc cho tài khoản với ID: " + accountId));
+        return modelMapper.map(smokingStatus, SmokingStatusDTO.class);
+    }
+
     public SmokingStatusDTO create(Long accountId, SmokingStatusDTO dto) {
         Account account = authenticationRepository.findById(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
