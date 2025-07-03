@@ -29,6 +29,7 @@ public class Quitprogress
     int money_saved;
     @Enumerated(EnumType.STRING)
     QuitProgressStatus quitProgressStatus;
+
     int point;
 
     @ManyToOne

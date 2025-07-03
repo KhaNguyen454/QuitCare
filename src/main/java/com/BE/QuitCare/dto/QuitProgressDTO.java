@@ -16,7 +16,6 @@ public class QuitProgressDTO
     private LocalDate date;
     private int cigarettes_smoked;
     private QuitHealthStatus quitHealthStatus;
-    private int money_saved;
     private QuitProgressStatus quitProgressStatus;
 
     private Long quitPlanStageId;

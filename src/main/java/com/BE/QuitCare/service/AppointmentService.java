@@ -66,7 +66,7 @@ public class AppointmentService
         slot.setAvailable(false);
         return appointment;
     }
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void confirmAppointment(Long appointmentId) {
         Account currentCoach = authenticationService.getCurentAccount();
 
@@ -100,8 +100,14 @@ public class AppointmentService
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
 
         if (currentCoach.getRole() != Role.COACH) {
-            throw new SecurityException("Bạn không có quyền hủy lịch hẹn này.");
+            throw new SecurityException("Tài khoản không phải là Coach.");
         }
+
+        Account coach = appointment.getSessionUser().getAccount();
+        if (coach == null || !coach.getId().equals(currentCoach.getId())) {
+            throw new SecurityException("Bạn không có quyền xác nhận lịch hẹn này.");
+        }
+
 
         if (appointment.getStatus() != AppointmentEnum.PENDING) {
             throw new BadRequestException("Chỉ có thể hủy lịch đang chờ xác nhận.");
@@ -138,17 +144,27 @@ public class AppointmentService
         }
     }
 
+
     public List<Appointment> getAppointmentsForCurrentCoach() {
         Account coach = authenticationService.getCurentAccount();
 
         if (coach == null) {
-            throw new IllegalStateException("Không thể lấy thông tin Coach đang đăng nhập.");
+            throw new SecurityException("Không thể lấy thông tin Coach đang đăng nhập.");
         }
+
         if (coach.getRole() != Role.COACH) {
             throw new BadRequestException("Chỉ Coach mới có thể xem lịch hẹn.");
         }
 
-        return appointmentRepository.findBySessionUser_Account_IdOrderByCreateAtDesc(coach.getId());
+        List<Appointment> appointments = appointmentRepository.findBySessionUser_Account_IdOrderByCreateAtDesc(coach.getId());
+        System.out.println(" Coach ID: " + coach.getId() + " - Tìm thấy " + appointments.size() + " lịch hẹn");
+
+        for (Appointment a : appointments) {
+            System.out.println("🗓 Appointment ID: " + a.getId() + ", Khách: " + a.getAccount().getFullName());
+        }
+
+        return appointments;
     }
+
 
 }
