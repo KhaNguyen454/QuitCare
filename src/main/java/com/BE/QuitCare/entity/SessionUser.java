@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,15 +18,15 @@ public class SessionUser
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public long id;
-    LocalDate date;
+
+    private LocalDate date;
+    private LocalTime start;
+    private LocalTime end;
+    private String label;
 
     @ManyToOne
         @JoinColumn(name = "account_id")
     Account account;
-
-    @ManyToOne
-    @JoinColumn(name = "session_id")
-    Session session;
 
     boolean isAvailable = true;
 
