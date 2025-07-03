@@ -22,6 +22,9 @@ public class UserAchievementService
     @Autowired
     QuitProgressRepository progressRepository;
 
+    public List<UserAchievement> getAchievementsByUserId(Long userId) {
+        return repository.findByAccount_Id(userId);
+    }
     public void checkAndGenerate(Account account, Quitprogress latestProgress) {
         Long accountId = account.getId();
 

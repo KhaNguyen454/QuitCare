@@ -45,7 +45,7 @@ public class AuthenticationAPI {
                         a.getId(),
                         a.getFullName(),
                         a.getUsername(),
-                        a.getAvatar(),   
+                        a.getAvatar(),
                         a.getTotalPoint()))
                 .toList();
 
