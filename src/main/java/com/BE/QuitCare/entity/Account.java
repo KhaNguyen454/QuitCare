@@ -38,6 +38,11 @@ public class Account implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Column(nullable = false)
+    private Integer totalPoint = 0;
+
+    private String avatar;
+
     @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -70,33 +75,40 @@ public class Account implements UserDetails {
 
     // Liên kết
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
-    List<SessionUser> sessionUsers = new ArrayList<>();
+    private List<UserAchievement> achievements = new ArrayList<>(); // Cập nhật: Thêm cascade, orphanRemoval và khởi tạo
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<UserMembership> memberships = new ArrayList<>();
+    List<SessionUser> sessionUsers = new ArrayList<>(); // Cập nhật: Thêm cascade, orphanRemoval và khởi tạo
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<UserMembership> memberships = new ArrayList<>(); // Cập nhật: Thêm cascade, orphanRemoval và khởi tạo
+
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // Cập nhật: Thêm cascade, orphanRemoval
+    @JsonIgnore // Đảm bảo JsonIgnore nếu bạn không muốn nó được serialize khi lấy Account
     private SmokingStatus smokingStatus;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // Cập nhật: Thêm cascade, orphanRemoval
     private QuitPlan quitPlan;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<PaymentHistory> paymentHistories = new ArrayList<>();
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<CommunityPost> communityPosts = new ArrayList<>();
+    List<Appointment> appointments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Comment> comments = new ArrayList<>();
+     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+     @JsonIgnore
+     private List<CommunityPost> communityPosts = new ArrayList<>();
 
-    public Account() {}
+     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+     @JsonIgnore
+     private List<Comment> comments = new ArrayList<>();
 
 }
 

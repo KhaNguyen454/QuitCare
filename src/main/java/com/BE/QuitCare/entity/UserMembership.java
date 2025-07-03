@@ -24,6 +24,7 @@ public class UserMembership {
     private boolean deleted = false;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "VARCHAR(20)")
     private MembershipStatus status;
 
     @ManyToOne

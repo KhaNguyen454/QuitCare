@@ -19,7 +19,7 @@ public class MembershipPlan {
     private Long id;
 
     private String name;
-    private Double price;
+    private Long price;
     private String description;
     //Thời lượng của gói
     private Duration duration;

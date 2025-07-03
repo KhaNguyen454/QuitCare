@@ -17,7 +17,7 @@ public class PaymentHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Double amountPaid; // Số tiền đã thanh toán (đơn vị: tiền đồng)
+    private Long amountPaid; // Số tiền đã thanh toán (đơn vị: tiền đồng)
 
     private LocalDateTime paymentDate; // Ngày thanh toán
 

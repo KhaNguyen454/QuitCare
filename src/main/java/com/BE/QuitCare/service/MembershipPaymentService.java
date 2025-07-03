@@ -1,5 +1,4 @@
 package com.BE.QuitCare.service;
-
 import com.BE.QuitCare.config.VNPAYConfig;
 import com.BE.QuitCare.dto.PaymentHistoryDTO;
 import com.BE.QuitCare.entity.Account;
@@ -23,6 +22,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.security.InvalidKeyException; // Import này
+import java.security.NoSuchAlgorithmException; // Import này
+import java.io.UnsupportedEncodingException; // Import này
 
 @Service
 public class MembershipPaymentService {
@@ -48,7 +50,7 @@ public class MembershipPaymentService {
      * @return URL chuyển hướng đến cổng thanh toán VNPAY.
      * @throws EntityNotFoundException nếu không tìm thấy tài khoản hoặc gói thành viên.
      * @throws IllegalArgumentException nếu tài khoản đã có gói thành viên đang hoạt động hoặc giá gói không hợp lệ.
-     * @throws RuntimeException nếu có lỗi trong quá trình tạo URL VNPAY.
+     * @throws RuntimeException nếu có lỗi trong quá trình tạo URL VNPAY (bao gồm các lỗi mã hóa/bảo mật).
      */
     @Transactional
     public String initiateVnPayPayment(Long accountId, Long membershipPlanId, HttpServletRequest request) {
@@ -57,14 +59,12 @@ public class MembershipPaymentService {
         MembershipPlan plan = membershipPlanRepository.findById(membershipPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gói thành viên với ID: " + membershipPlanId));
 
-        // --- Bắt đầu kiểm tra giá gói thành viên ---
         if (plan.getPrice() == null) {
             throw new IllegalArgumentException("Giá gói thành viên không được để trống.");
         }
         if (plan.getPrice() <= 0) {
             throw new IllegalArgumentException("Giá gói thành viên phải là một số dương.");
         }
-        // --- Kết thúc kiểm tra giá gói thành viên ---
 
         Optional<UserMembership> existingActiveMembership = userMembershipRepository.findByAccountIdAndStatus(accountId, MembershipStatus.ACTIVE);
         if (existingActiveMembership.isPresent()) {
@@ -74,14 +74,19 @@ public class MembershipPaymentService {
         UserMembership userMembership = new UserMembership();
         userMembership.setAccount(account);
         userMembership.setMembershipPlan(plan);
-        userMembership.setStatus(MembershipStatus.PENDING); // Đặt trạng thái ban đầu là PENDING
+        userMembership.setStatus(MembershipStatus.PENDING);
         userMembership.setStartDate(LocalDateTime.now());
         userMembership.setEndDate(LocalDateTime.now().plus(plan.getDuration()));
         userMembership.setDeleted(false);
+        // --- THÊM DÒNG LOG ĐỂ DEBUG LỖI TREO ---
+        System.out.println("DEBUG: Chuẩn bị lưu UserMembership vào database...");
+        userMembership = userMembershipRepository.save(userMembership); // Dòng này có thể gây treo
+        System.out.println("DEBUG: Đã lưu UserMembership thành công. ID: " + userMembership.getId());
+        // --- KẾT THÚC DÒNG LOG ---
         userMembership = userMembershipRepository.save(userMembership);
 
         String orderInfo = "Thanh toan goi thanh vien " + plan.getName() + " cho tai khoan " + account.getEmail();
-        String vnpTxnRef = VNPAYConfig.getRandomNumber(8) + "_" + userMembership.getId(); // Gắn ID userMembership vào vnp_TxnRef
+        String vnpTxnRef = VNPAYConfig.getRandomNumber(8) + "_" + userMembership.getId();
 
         PaymentHistory paymentHistory = new PaymentHistory();
         paymentHistory.setAmountPaid(plan.getPrice());
@@ -89,8 +94,8 @@ public class MembershipPaymentService {
         paymentHistory.setPaymentMethod(PaymentMethod.VNPAY);
         paymentHistory.setStatus(PaymentStatus.PENDING);
         paymentHistory.setUserMembership(userMembership);
-        paymentHistory.setVnpTxnRef(vnpTxnRef); // Lưu mã tham chiếu của hệ thống
-        paymentHistory.setVnpOrderInfo(orderInfo); // Lưu thông tin đơn hàng
+        paymentHistory.setVnpTxnRef(vnpTxnRef);
+        paymentHistory.setVnpOrderInfo(orderInfo);
         paymentHistory.setAccount(account);
 
         paymentHistory = paymentHistoryRepository.save(paymentHistory);
@@ -98,16 +103,19 @@ public class MembershipPaymentService {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
         String vnpayReturnUrl = baseUrl + VNPAYConfig.vnp_Returnurl;
 
-        long amountLong = (long) (plan.getPrice().doubleValue()); // Lấy giá trị double từ Double object, sau đó ép kiểu sang long
-
-        System.out.println("Số tiền (amountLong) gửi đến VNPAY (trước khi nhân 100 trong VNPAYService): " + amountLong);
+        long amountLong = plan.getPrice(); // Giá gốc
 
         String vnpayOrderInfo = "PM_ID_" + paymentHistory.getId();
 
         String vnpayUrl;
         try {
+            // Gọi phương thức createOrder đã được chuẩn hóa trong VNPAYService
             vnpayUrl = vnpayService.createOrder(request, amountLong, vnpayOrderInfo, vnpayReturnUrl);
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException e) {
+            // Bắt các ngoại lệ cụ thể từ VNPAYService và gói lại thành RuntimeException
+            throw new RuntimeException("Lỗi cấu hình hoặc mã hóa khi tạo URL thanh toán VNPAY: " + e.getMessage(), e);
         } catch (Exception e) {
+            // Bắt các lỗi chung khác
             throw new RuntimeException("Lỗi không xác định khi tạo URL thanh toán VNPAY: " + e.getMessage(), e);
         }
 

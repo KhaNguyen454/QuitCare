@@ -7,10 +7,7 @@ import com.BE.QuitCare.entity.QuitPlanStage;
 import com.BE.QuitCare.entity.Quitprogress;
 import com.BE.QuitCare.enums.*;
 import com.BE.QuitCare.exception.BadRequestException;
-import com.BE.QuitCare.repository.MessageNotificationRepository;
-import com.BE.QuitCare.repository.QuitPlanStageRepository;
-import com.BE.QuitCare.repository.QuitProgressRepository;
-import com.BE.QuitCare.repository.SmokingStatusRepository;
+import com.BE.QuitCare.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +33,10 @@ public class QuitProgressService
     private QuitProgressRepository quitProgressRepository;
     @Autowired
     AuthenticationService authenticationService;
+    @Autowired
+    AuthenticationRepository  authenticationRepository;
+    @Autowired
+    UserAchievementService  userAchievementService;
 
     public List<Quitprogress> getAll() {
         return repository.findAll();
@@ -78,7 +79,6 @@ public class QuitProgressService
             smokingStatusRepository.findById(dto.getSmokingStatusId())
                     .ifPresent(quitprogress::setSmokingStatus);
         }
-
         // ===== TÍNH POINT & MONEY_SAVED =====
         int referenceValue = 0;
         if (stage != null && stage.getTargetCigarettes() != null) {
@@ -99,15 +99,15 @@ public class QuitProgressService
         List<MessageNotification> notifications = generateNotifications(saved);
         messageNotificationRepository.saveAll(notifications);
 
-        return saved;
 
         Account user = quitprogress.getSmokingStatus().getAccount();
         user.setTotalPoint(user.getTotalPoint() + quitprogress.getPoint());
-        accountRepository.save(user);
+        authenticationRepository.save(user);
 
-        // Check thành tựu
-        userAchievementService.checkAndGenerate(user, quitprogress);
+        // Kiểm tra & tạo thành tựu
+        userAchievementService.checkAndGenerate(user, saved);
 
+        return saved;
     }
 
 
@@ -152,8 +152,7 @@ public class QuitProgressService
         // 1. Tính điểm
         int referenceValue = 0;
         QuitPlanStage stage = quitprogress.getQuitPlanStage();
-        if (stage != null && stage.getTargetCigarettes() != null) {
-            referenceValue = stage.getTargetCigarettes().intValue();
+        if (stage != null && stage.getTargetCigarettes() != null) {referenceValue = stage.getTargetCigarettes().intValue();
         }
 
         int point = referenceValue - quitprogress.getCigarettes_smoked();
@@ -206,8 +205,7 @@ public class QuitProgressService
             if (symptomCounts.size() > 2) {
                 MessageNotification n4 = new MessageNotification();
                 n4.setQuitprogress(quitprogress);
-                n4.setSend_at(LocalDate.now());
-                n4.setMessageTypeStatus(MessageTypeStatus.NOTIFICATION4);
+                n4.setSend_at(LocalDate.now());n4.setMessageTypeStatus(MessageTypeStatus.NOTIFICATION4);
                 n4.setMessageStatus(MessageStatus.WARNING);
                 n4.setContent("Bạn đã có hơn 2 triệu chứng khác nhau trong 3 ngày gần đây. Nên hẹn gặp huấn luyện viên sớm.");
                 notifications.add(n4);
@@ -227,9 +225,5 @@ public class QuitProgressService
 
         return notifications;
     }
-
-
-
-
 
 }

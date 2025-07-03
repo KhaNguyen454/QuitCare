@@ -23,6 +23,7 @@ public class MembershipPlanService {
         dto.setName(entity.getName());
         dto.setPrice(entity.getPrice());
         dto.setDescription(entity.getDescription());
+        dto.setDuration(entity.getDuration()); // <-- THÊM DÒNG NÀY
         return dto;
     }
 
@@ -33,6 +34,7 @@ public class MembershipPlanService {
         entity.setName(dto.getName());
         entity.setPrice(dto.getPrice());
         entity.setDescription(dto.getDescription());
+        entity.setDuration(dto.getDuration()); // <-- THÊM DÒNG NÀY
         return entity;
     }
 
@@ -61,9 +63,10 @@ public class MembershipPlanService {
             plan.setName(dto.getName());
             plan.setPrice(dto.getPrice());
             plan.setDescription(dto.getDescription());
+            plan.setDuration(dto.getDuration()); // <-- THÊM DÒNG NÀY
             return toDTO(repository.save(plan));
         }
-        return null;
+        return null; // Có thể ném EntityNotFoundException thay vì trả về null
     }
 
     public boolean softDelete(Long id) {
