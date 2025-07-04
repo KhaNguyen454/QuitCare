@@ -53,7 +53,7 @@ public class AppointmentService
         SessionUser slot = sessionUserRepository.findByAccountAndDateAndStart(
                 doctor,
                 appointmentRequest.getAppointmentDate(),
-                appointmentRequest.getStartTime()
+                appointmentRequest.getStart()
         ).orElseThrow(() -> new BadRequestException("Không tìm thấy slot phù hợp"));
 
         if (!slot.isAvailable()) {

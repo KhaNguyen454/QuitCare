@@ -13,5 +13,5 @@ public class AppointmentRequest
     private LocalDate appointmentDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
     @Schema(type = "string", pattern = "HH:mm", example = "09:00")
-    private LocalTime startTime;
+    private LocalTime start;
 }
