@@ -10,4 +10,7 @@ import java.util.List;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long>
 {
     List<Appointment> findBySessionUser_Account_IdOrderByCreateAtDesc(Long coachId);
+
+    List<Appointment> findByAccount_IdOrderByCreateAtDesc(Long customerId);
+
 }

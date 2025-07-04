@@ -2,6 +2,8 @@ package com.BE.QuitCare.api;
 
 
 import com.BE.QuitCare.dto.request.AppointmentRequest;
+import com.BE.QuitCare.dto.response.AppointmentCoachResponseDTO;
+import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
 import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.service.AppointmentService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,10 +34,19 @@ public class AppointmentAPI
     }
 
     @GetMapping("/coach")
-    public ResponseEntity<List<Appointment>> getAppointmentsForCoach() {
-        List<Appointment> appointments = appointmentService.getAppointmentsForCurrentCoach();
+    public ResponseEntity<List<AppointmentCoachResponseDTO>> getAppointmentsForCoach() {
+        List<AppointmentCoachResponseDTO> appointments = appointmentService.getAppointmentsForCurrentCoach();
         return ResponseEntity.ok(appointments);
     }
+
+
+    @GetMapping("/customer")
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsForCustomer() {
+        List<AppointmentResponseDTO> appointments = appointmentService.getAppointmentsForCurrentCustomer();
+        return ResponseEntity.ok(appointments);
+    }
+
+
 
 
 }

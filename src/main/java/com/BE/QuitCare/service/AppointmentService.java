@@ -1,6 +1,8 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.request.AppointmentRequest;
+import com.BE.QuitCare.dto.response.AppointmentCoachResponseDTO;
+import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.entity.SessionUser;
@@ -34,6 +36,11 @@ public class AppointmentService
 
     @Transactional
     public Appointment create(AppointmentRequest appointmentRequest) {
+        Account customer = authenticationService.getCurentAccount();
+
+        if (customer.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Chỉ CUSTOMER mới có thể đặt lịch hẹn.");
+        }
         Account doctor = authenticationRepository.findById(appointmentRequest.getCoachId())
                 .orElseThrow(() -> new BadRequestException("Coach not found"));
 
@@ -78,7 +85,7 @@ public class AppointmentService
 
 
 
-    public List<Appointment> getAppointmentsForCurrentCoach() {
+    public List<AppointmentCoachResponseDTO> getAppointmentsForCurrentCoach() {
         Account coach = authenticationService.getCurentAccount();
 
         if (coach == null) {
@@ -89,12 +96,42 @@ public class AppointmentService
             throw new BadRequestException("Chỉ Coach mới có thể xem lịch hẹn.");
         }
 
-        // Lấy tất cả lịch hẹn liên quan đến Coach, đã được xác nhận (COMPLETED)
         List<Appointment> appointments = appointmentRepository
                 .findBySessionUser_Account_IdOrderByCreateAtDesc(coach.getId());
 
-        return appointments;
+        return appointments.stream().map(appointment -> {
+            AppointmentCoachResponseDTO dto = new AppointmentCoachResponseDTO();
+            dto.setCustomerName(appointment.getAccount().getFullName());
+            dto.setAppointmentDate(appointment.getSessionUser().getDate());
+            dto.setStartTime(appointment.getSessionUser().getStart());
+            dto.setStatus(appointment.getStatus().name());
+            dto.setGoogleMeetLink(appointment.getGoogleMeetLink());
+            return dto;
+        }).toList();
     }
+
+
+    public List<AppointmentResponseDTO> getAppointmentsForCurrentCustomer() {
+        Account customer = authenticationService.getCurentAccount();
+
+        if (customer.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Chỉ CUSTOMER mới có thể xem lịch hẹn của mình.");
+        }
+
+        List<Appointment> appointments = appointmentRepository.findByAccount_IdOrderByCreateAtDesc(customer.getId());
+
+        return appointments.stream().map(appt -> {
+            AppointmentResponseDTO dto = new AppointmentResponseDTO();
+            dto.setCoachName(appt.getSessionUser().getAccount().getFullName());
+            dto.setAppointmentDate(appt.getSessionUser().getDate());
+            dto.setStartTime(appt.getSessionUser().getStart());
+            dto.setStatus(appt.getStatus().name());
+            dto.setGoogleMeetLink(appt.getGoogleMeetLink());
+            return dto;
+        }).toList();
+    }
+
+
 
 
 
