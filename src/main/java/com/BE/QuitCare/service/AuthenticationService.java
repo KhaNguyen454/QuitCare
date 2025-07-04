@@ -5,11 +5,13 @@ import com.BE.QuitCare.dto.request.*;
 import com.BE.QuitCare.dto.response.AccountResponse;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.exception.AuthenticationException;
+import com.BE.QuitCare.exception.BadRequestException;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -133,10 +135,22 @@ public class AuthenticationService implements UserDetailsService {
     }
 
 
-    public  Account getCurentAccount(){
-        String email= SecurityContextHolder.getContext().getAuthentication().getName();
-        return authenticationRepository.findAccountByEmail(email);
+    public Account getCurentAccount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BadRequestException("Người dùng chưa xác thực.");
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof Account)) {
+            throw new BadRequestException("Principal không hợp lệ.");
+        }
+
+        return (Account) principal;
     }
+
 
 
 

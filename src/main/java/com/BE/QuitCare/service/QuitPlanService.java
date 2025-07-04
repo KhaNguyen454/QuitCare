@@ -60,7 +60,7 @@ public class QuitPlanService {
         quitPlan.setAccount(account);
         quitPlan.setSystemPlan(request.isSystemPlan());
         quitPlan.setLocalDateTime(LocalDateTime.now());
-        quitPlan.setQuitPlanStatus(QuitPlanStatus.DRAFT); // Trạng thái mặc định khi tạo là NHÁP
+        quitPlan.setQuitPlanStatus(QuitPlanStatus.DRAFT);
 
         // Tính toán AddictionLevel (Mức độ nghiện)
         quitPlan.setAddictionLevel(calculateAddictionLevel(smokingStatus));
@@ -71,7 +71,7 @@ public class QuitPlanService {
         if (request.isSystemPlan()) {
             generateSystemQuitPlanStages(savedQuitPlan, smokingStatus.getCigarettes_per_day());
         }
-
+// Trạng thái mặc định khi tạo là NHÁP
         // Ánh xạ sang DTO và trả về
         return modelMapper.map(savedQuitPlan, QuitPlanDTO.class);
     }
