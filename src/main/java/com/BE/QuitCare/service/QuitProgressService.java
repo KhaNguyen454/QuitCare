@@ -113,37 +113,89 @@ public class QuitProgressService
 
 
 
-    public Quitprogress update(Long id, Quitprogress updated) {
-        return repository.findById(id).map(existing -> {
-            existing.setDate(updated.getDate());
-            existing.setCigarettes_smoked(updated.getCigarettes_smoked());
-            existing.setQuitHealthStatus(updated.getQuitHealthStatus());
-            existing.setMoney_saved(updated.getMoney_saved());
-            existing.setQuitProgressStatus(updated.getQuitProgressStatus());
-            existing.setPoint(updated.getPoint());
-            existing.setQuitPlanStage(updated.getQuitPlanStage());
-            return repository.save(existing);
-        }).orElse(null);
-    }
-
-    public Quitprogress checkAndMarkMissed(Long smokingStatusId, LocalDate date) {
-        boolean exists = quitProgressRepository.existsBySmokingStatus_IdAndDate(smokingStatusId, date);
-        if (!exists) {
-            Quitprogress missed = new Quitprogress();
-            missed.setDate(date);
-            missed.setCigarettes_smoked(0);
-            missed.setQuitProgressStatus(QuitProgressStatus.MISSED);
-            missed.setQuitHealthStatus(null);
-            missed.setPoint(0);
-            missed.setMoney_saved(0);
-
-            // Gán SmokingStatus
-            smokingStatusRepository.findById(smokingStatusId).ifPresent(missed::setSmokingStatus);
-
-            return repository.save(missed);
+    public Quitprogress update(Long id, QuitProgressDTO dto) {
+        Account user = authenticationService.getCurentAccount();
+        if (user.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Chỉ Customer mới có thể cập nhật tiến trình.");
         }
-        return null; // đã có bản ghi
+
+        return repository.findById(id).map(existing -> {
+            existing.setDate(dto.getDate());
+            existing.setCigarettes_smoked(dto.getCigarettes_smoked());
+            existing.setQuitHealthStatus(dto.getQuitHealthStatus());
+            existing.setQuitProgressStatus(dto.getQuitProgressStatus());
+
+            // ===== Cập nhật QuitPlanStage =====
+            if (dto.getQuitPlanStageId() != null) {
+                QuitPlanStage stage = stageRepository.findById(dto.getQuitPlanStageId()).orElse(null);
+                existing.setQuitPlanStage(stage);
+            }
+
+            // ===== Cập nhật SmokingStatus =====
+            if (dto.getSmokingStatusId() != null) {
+                smokingStatusRepository.findById(dto.getSmokingStatusId())
+                        .ifPresent(existing::setSmokingStatus);
+            }
+
+            // ===== TÍNH LẠI POINT & MONEY_SAVED =====
+            int referenceValue = 0;
+            QuitPlanStage stage = existing.getQuitPlanStage();
+            if (stage != null && stage.getTargetCigarettes() != null) {
+                referenceValue = stage.getTargetCigarettes().intValue();
+            }
+
+            int rawPoint = referenceValue - existing.getCigarettes_smoked();
+            int point = Math.max(rawPoint, 0) * 10;
+            int moneySaved = Math.max(rawPoint, 0) * 1000;
+
+            existing.setPoint(point);
+            existing.setMoney_saved(moneySaved);
+
+            // ===== CẬP NHẬT TỔNG ĐIỂM USER (nếu có liên kết SmokingStatus) =====
+            if (existing.getSmokingStatus() != null) {
+                Account acc = existing.getSmokingStatus().getAccount();
+                acc.setTotalPoint(acc.getTotalPoint() + point); // cộng thêm điểm mới
+                authenticationRepository.save(acc);
+            }
+
+            return repository.save(existing);
+        }).orElseThrow(() -> new BadRequestException("Không tìm thấy tiến trình cần cập nhật."));
     }
+
+
+    public List<Quitprogress> autoCheckMissedDays(Long smokingStatusId) {
+        List<Quitprogress> createdMissed = new ArrayList<>();
+
+        // Tìm ngày gần nhất mà user đã khai báo
+        List<Quitprogress> allProgress = quitProgressRepository
+                .findBySmokingStatus_IdOrderByDateDesc(smokingStatusId);
+
+        if (allProgress.isEmpty()) return createdMissed;
+
+        LocalDate lastRecordedDate = allProgress.get(0).getDate();
+        LocalDate today = LocalDate.now();
+
+        for (LocalDate d = lastRecordedDate.plusDays(1); d.isBefore(today); d = d.plusDays(1)) {
+            boolean exists = quitProgressRepository.existsBySmokingStatus_IdAndDate(smokingStatusId, d);
+            if (!exists) {
+                Quitprogress missed = new Quitprogress();
+                missed.setDate(d);
+                missed.setCigarettes_smoked(0);
+                missed.setQuitProgressStatus(QuitProgressStatus.MISSED);
+                missed.setQuitHealthStatus(null);
+                missed.setPoint(0);
+                missed.setMoney_saved(0);
+
+                smokingStatusRepository.findById(smokingStatusId)
+                        .ifPresent(missed::setSmokingStatus);
+
+                createdMissed.add(repository.save(missed));
+            }
+        }
+
+        return createdMissed;
+    }
+
 
 
 

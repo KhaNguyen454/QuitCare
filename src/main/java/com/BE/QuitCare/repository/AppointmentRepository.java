@@ -9,7 +9,5 @@ import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long>
 {
-    List<Appointment> findAllByStatusAndExpireAtBefore(AppointmentEnum status, LocalDateTime time);
-
     List<Appointment> findBySessionUser_Account_IdOrderByCreateAtDesc(Long coachId);
 }

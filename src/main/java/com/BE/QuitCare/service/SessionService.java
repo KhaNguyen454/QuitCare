@@ -15,6 +15,7 @@ import com.BE.QuitCare.repository.SessionRepository;
 import com.BE.QuitCare.repository.SessionUserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,7 +56,7 @@ public class SessionService
                 template.setEnd(start.plusMinutes(60));
                 templates.add(template);
 
-                start = start.plusMinutes(90); // nghỉ 30 phút
+                start = start.plusMinutes(60);
             }
 
             sessionRepository.saveAll(templates);
@@ -103,6 +104,18 @@ public class SessionService
         }
 
         sessionUserRepository.saveAll(newSessions);
+    }
+    //@Scheduled(cron = "0 0 6 * * *")
+    @Scheduled(fixedDelay = 10000) // chạy mỗi 10 giây
+    public void autoGenerateCoachSessions() {
+        LocalDate today = LocalDate.now();
+        List<Account> coaches = authenticationRepository.findByRole(Role.COACH);
+
+        for (Account coach : coaches) {
+            ensureSessionForCoachOnDate(coach, today);
+        }
+
+        System.out.println(" Đã tự động tạo lịch làm việc cho coach ngày: " + today);
     }
 
 

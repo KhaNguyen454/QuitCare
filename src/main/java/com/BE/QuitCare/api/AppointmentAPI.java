@@ -31,21 +31,11 @@ public class AppointmentAPI
         return ResponseEntity.ok().body(appointment);
     }
 
-    @PutMapping("/{id}/confirm")
-    public ResponseEntity<?> confirmAppointment(@PathVariable Long id) {
-        appointmentService.confirmAppointment(id);
-        return ResponseEntity.ok("Appointment confirmed successfully.");
-    }
-
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelAppointment(@PathVariable Long id) {
-        appointmentService.cancelAppointment(id);
-        return ResponseEntity.ok("Appointment cancelled successfully.");
-    }
     @GetMapping("/coach")
     public ResponseEntity<List<Appointment>> getAppointmentsForCoach() {
         List<Appointment> appointments = appointmentService.getAppointmentsForCurrentCoach();
         return ResponseEntity.ok(appointments);
     }
+
 
 }
