@@ -10,5 +10,4 @@ public class RemoveSessionDTO
 {
     private Long accountId;
     private LocalDate date;
-    private LocalTime startTime;
 }

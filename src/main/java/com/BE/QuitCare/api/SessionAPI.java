@@ -2,6 +2,7 @@ package com.BE.QuitCare.api;
 
 import com.BE.QuitCare.dto.RegisterSessionDTO;
 import com.BE.QuitCare.dto.RemoveSessionDTO;
+import com.BE.QuitCare.dto.SessionUserDTO;
 import com.BE.QuitCare.entity.Session;
 import com.BE.QuitCare.entity.SessionUser;
 import com.BE.QuitCare.service.SessionService;
@@ -37,6 +38,28 @@ public class SessionAPI
         sessionService.removeWorkingDay(dto);
         return ResponseEntity.ok("Đã xin nghỉ thành công cho ngày " + dto.getDate());
     }
+
+    @GetMapping("/working-days")
+    public ResponseEntity<List<SessionUserDTO>> getWorkingSessionsForCoach(
+            @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        List<SessionUserDTO> sessions = sessionService.getWorkingSessionsForCurrentCoach(from, to);
+        return ResponseEntity.ok(sessions);
+    }
+
+    @GetMapping("/available-slots")
+    public ResponseEntity<List<SessionUserDTO>> getAvailableSlotsForBooking(
+            @RequestParam Long coachId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        List<SessionUserDTO> sessions = sessionService.getAvailableSessionsForBooking(coachId, from, to);
+        return ResponseEntity.ok(sessions);
+    }
+
+
+
 
 
 }

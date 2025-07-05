@@ -20,7 +20,6 @@ public class Session
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    boolean isDelete =false;
     private LocalDate date;
     private String label;
     private LocalTime start;

@@ -19,9 +19,11 @@ public class Appointment
 
     LocalDate createAt;
     @Enumerated(EnumType.STRING)
+
     AppointmentEnum status;
-    @Column(name = "expire_at")
-    private LocalDateTime expireAt;
+
+    @Column(name = "google_meet_link")
+    private String googleMeetLink;
 
     @ManyToOne
     @JoinColumn(name = "account_id")

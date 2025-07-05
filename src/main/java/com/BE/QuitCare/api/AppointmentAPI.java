@@ -2,6 +2,8 @@ package com.BE.QuitCare.api;
 
 
 import com.BE.QuitCare.dto.request.AppointmentRequest;
+import com.BE.QuitCare.dto.response.AppointmentCoachResponseDTO;
+import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
 import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.service.AppointmentService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -31,21 +33,20 @@ public class AppointmentAPI
         return ResponseEntity.ok().body(appointment);
     }
 
-    @PutMapping("/{id}/confirm")
-    public ResponseEntity<?> confirmAppointment(@PathVariable Long id) {
-        appointmentService.confirmAppointment(id);
-        return ResponseEntity.ok("Appointment confirmed successfully.");
-    }
-
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelAppointment(@PathVariable Long id) {
-        appointmentService.cancelAppointment(id);
-        return ResponseEntity.ok("Appointment cancelled successfully.");
-    }
     @GetMapping("/coach")
-    public ResponseEntity<List<Appointment>> getAppointmentsForCoach() {
-        List<Appointment> appointments = appointmentService.getAppointmentsForCurrentCoach();
+    public ResponseEntity<List<AppointmentCoachResponseDTO>> getAppointmentsForCoach() {
+        List<AppointmentCoachResponseDTO> appointments = appointmentService.getAppointmentsForCurrentCoach();
         return ResponseEntity.ok(appointments);
     }
+
+
+    @GetMapping("/customer")
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsForCustomer() {
+        List<AppointmentResponseDTO> appointments = appointmentService.getAppointmentsForCurrentCustomer();
+        return ResponseEntity.ok(appointments);
+    }
+
+
+
 
 }

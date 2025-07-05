@@ -1,6 +1,8 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.request.AppointmentRequest;
+import com.BE.QuitCare.dto.response.AppointmentCoachResponseDTO;
+import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.entity.SessionUser;
@@ -34,6 +36,11 @@ public class AppointmentService
 
     @Transactional
     public Appointment create(AppointmentRequest appointmentRequest) {
+        Account customer = authenticationService.getCurentAccount();
+
+        if (customer.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Chỉ CUSTOMER mới có thể đặt lịch hẹn.");
+        }
         Account doctor = authenticationRepository.findById(appointmentRequest.getCoachId())
                 .orElseThrow(() -> new BadRequestException("Coach not found"));
 
@@ -46,7 +53,7 @@ public class AppointmentService
         SessionUser slot = sessionUserRepository.findByAccountAndDateAndStart(
                 doctor,
                 appointmentRequest.getAppointmentDate(),
-                appointmentRequest.getStartTime()
+                appointmentRequest.getStart()
         ).orElseThrow(() -> new BadRequestException("Không tìm thấy slot phù hợp"));
 
         if (!slot.isAvailable()) {
@@ -60,96 +67,25 @@ public class AppointmentService
 
         Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
-        appointment.setStatus(AppointmentEnum.PENDING);
-        appointment.setExpireAt(LocalDateTime.now().plusHours(2));
+        appointment.setStatus(AppointmentEnum.COMPLETED);
         appointment.setAccount(currentAccount);
         appointment.setSessionUser(slot);
+        appointment.setGoogleMeetLink(generateGoogleMeetLink());
         appointmentRepository.save(appointment);
 
         slot.setAvailable(false);
         return appointment;
     }
 
-    @Transactional
-    public void confirmAppointment(Long appointmentId) {
-        Account currentCoach = authenticationService.getCurentAccount();
-
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
-
-        // Kiểm tra quyền Coach và sở hữu
-        if (currentCoach.getRole() != Role.COACH ) {
-            throw new SecurityException("Bạn không có quyền xác nhận lịch hẹn này.");
-        }
-
-        // Kiểm tra trạng thái
-        if (appointment.getStatus() != AppointmentEnum.PENDING) {
-            throw new BadRequestException("Lịch hẹn không ở trạng thái chờ xác nhận.");
-        }
-
-        // Kiểm tra thời gian hết hạn
-        if (appointment.getExpireAt().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Lịch hẹn đã hết thời gian chờ xác nhận.");
-        }
-
-        appointment.setStatus(AppointmentEnum.COMPLETED);
-        appointmentRepository.save(appointment);
-    }
-
-    @Transactional
-    public void cancelAppointment(Long appointmentId) {
-        Account currentCoach = authenticationService.getCurentAccount();
-
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
-
-        if (currentCoach.getRole() != Role.COACH) {
-            throw new SecurityException("Tài khoản không phải là Coach.");
-        }
-
-        Account coach = appointment.getSessionUser().getAccount();
-        if (coach == null || !coach.getId().equals(currentCoach.getId())) {
-            throw new SecurityException("Bạn không có quyền xác nhận lịch hẹn này.");
-        }
-
-
-        if (appointment.getStatus() != AppointmentEnum.PENDING) {
-            throw new BadRequestException("Chỉ có thể hủy lịch đang chờ xác nhận.");
-        }
-
-        appointment.setStatus(AppointmentEnum.CANCELLED);
-
-        // Mở lại slot
-        SessionUser slot = appointment.getSessionUser();
-        if (slot != null) {
-            slot.setAvailable(true);
-            sessionUserRepository.save(slot);
-        }
-
-        appointmentRepository.save(appointment);
-    }
-
-    @Transactional
-    public void cancelExpiredAppointments() {
-        List<Appointment> expiredAppointments = appointmentRepository
-                .findAllByStatusAndExpireAtBefore(AppointmentEnum.PENDING, LocalDateTime.now());
-
-        for (Appointment appointment : expiredAppointments) {
-            appointment.setStatus(AppointmentEnum.CANCELLED);
-
-            // Nếu có sessionUser thì set lại slot là available
-            SessionUser sessionUser = appointment.getSessionUser();
-            if (sessionUser != null) {
-                sessionUser.setAvailable(true);
-                sessionUserRepository.save(sessionUser); // Đừng quên lưu lại
-            }
-
-            appointmentRepository.save(appointment);
-        }
+    private String generateGoogleMeetLink() {
+        // Cách đơn giản: tạo chuỗi giả lập như Meet
+        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 8);
+        return "https://meet.google.com/" + uniqueId;
     }
 
 
-    public List<Appointment> getAppointmentsForCurrentCoach() {
+
+    public List<AppointmentCoachResponseDTO> getAppointmentsForCurrentCoach() {
         Account coach = authenticationService.getCurentAccount();
 
         if (coach == null) {
@@ -160,15 +96,43 @@ public class AppointmentService
             throw new BadRequestException("Chỉ Coach mới có thể xem lịch hẹn.");
         }
 
-        List<Appointment> appointments = appointmentRepository.findBySessionUser_Account_IdOrderByCreateAtDesc(coach.getId());
-        System.out.println(" Coach ID: " + coach.getId() + " - Tìm thấy " + appointments.size() + " lịch hẹn");
+        List<Appointment> appointments = appointmentRepository
+                .findBySessionUser_Account_IdOrderByCreateAtDesc(coach.getId());
 
-        for (Appointment a : appointments) {
-            System.out.println("🗓 Appointment ID: " + a.getId() + ", Khách: " + a.getAccount().getFullName());
+        return appointments.stream().map(appointment -> {
+            AppointmentCoachResponseDTO dto = new AppointmentCoachResponseDTO();
+            dto.setCustomerName(appointment.getAccount().getFullName());
+            dto.setAppointmentDate(appointment.getSessionUser().getDate());
+            dto.setStartTime(appointment.getSessionUser().getStart());
+            dto.setStatus(appointment.getStatus().name());
+            dto.setGoogleMeetLink(appointment.getGoogleMeetLink());
+            return dto;
+        }).toList();
+    }
+
+
+    public List<AppointmentResponseDTO> getAppointmentsForCurrentCustomer() {
+        Account customer = authenticationService.getCurentAccount();
+
+        if (customer.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Chỉ CUSTOMER mới có thể xem lịch hẹn của mình.");
         }
 
-        return appointments;
+        List<Appointment> appointments = appointmentRepository.findByAccount_IdOrderByCreateAtDesc(customer.getId());
+
+        return appointments.stream().map(appt -> {
+            AppointmentResponseDTO dto = new AppointmentResponseDTO();
+            dto.setCoachName(appt.getSessionUser().getAccount().getFullName());
+            dto.setAppointmentDate(appt.getSessionUser().getDate());
+            dto.setStartTime(appt.getSessionUser().getStart());
+            dto.setStatus(appt.getStatus().name());
+            dto.setGoogleMeetLink(appt.getGoogleMeetLink());
+            return dto;
+        }).toList();
     }
+
+
+
 
 
 }

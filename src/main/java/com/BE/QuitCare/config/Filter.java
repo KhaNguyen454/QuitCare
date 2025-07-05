@@ -35,6 +35,7 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PUBLIC_API = List.of(
             "POST:/api/auth/register",
             "POST:/api/auth/login",
+            "GET:/api/auth/ranking",
             "GET:/api/auth/oauth2/login/success",
             "GET:/oauth2/**",
             "GET:/swagger-ui/**",       //  thêm dòng này
