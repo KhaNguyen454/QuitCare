@@ -25,9 +25,13 @@ public class QuitPlan {
 
     boolean isSystemPlan;
 
-    LocalDateTime localDateTime;
+    // Đổi tên từ localDateTime thành startDate
+    private LocalDateTime startDate; // Ngày bắt đầu thực tế của kế hoạch
 
-    QuitPlanStatus quitPlanStatus;
+    private LocalDateTime endDate; // Ngày kết thúc thực tế của kế hoạch
+
+    @Enumerated(EnumType.STRING)
+    private QuitPlanStatus quitPlanStatus; // Đổi thành private và thêm @Enumerated
 
     // Mối quan hệ OneToOne với Account (chỉ cho Role CUSTOMER)
     @OneToOne(fetch = FetchType.LAZY)

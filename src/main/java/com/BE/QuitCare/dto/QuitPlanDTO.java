@@ -12,8 +12,9 @@ public class QuitPlanDTO {
     private Long id;
     private AddictionLevel addictionLevel;
     private boolean isSystemPlan;
-    private LocalDateTime localDateTime;
+    private LocalDateTime startDate; // Thêm startDate
+    private LocalDateTime endDate; // Thêm endDate
     private QuitPlanStatus quitPlanStatus;
-    private Long accountId; // Để liên kết với Account
-    private List<QuitPlanStageDTO> stages; // Bao gồm cả stages khi cần hiển thị chi tiết
+    private Long accountId; // Thêm accountId để tiện trả về
+    private List<QuitPlanStageDTO> stages; // Bao gồm danh sách các giai đoạn
 }

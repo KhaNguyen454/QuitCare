@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 @Tag(
         name = "09. Main Flow lập kế hoạch cái thuốc "
@@ -69,6 +70,24 @@ public class QuitPlanAPI {
     }
 
     /**
+     * Đặt ngày bắt đầu cho một kế hoạch cai nghiện.
+     * URL: PUT /api/v1/customers/{accountId}/quit-plans/{quitPlanId}/set-start-date
+     * @param accountId ID của tài khoản khách hàng sở hữu kế hoạch.
+     * @param quitPlanId ID của kế hoạch cai nghiện.
+     * @param startDate Ngày bắt đầu mới.
+     * @return ResponseEntity chứa QuitPlanDTO đã cập nhật và trạng thái HTTP OK.
+     */
+    @PutMapping("/{quitPlanId}/set-start-date")
+    public ResponseEntity<QuitPlanDTO> setQuitPlanStartDate(
+            @PathVariable Long accountId,
+            @PathVariable Long quitPlanId,
+            @RequestBody LocalDateTime startDate) { // Nhận LocalDateTime trực tiếp từ body
+        QuitPlanDTO updatedPlan = quitPlanService.setQuitPlanStartDate(accountId, quitPlanId, startDate);
+        return ResponseEntity.ok(updatedPlan);
+    }
+
+
+    /**
      * Xóa một kế hoạch cai nghiện.
      * @param accountId ID của tài khoản khách hàng sở hữu kế hoạch.
      * @param quitPlanId ID của kế hoạch cai nghiện cần xóa.
@@ -96,9 +115,8 @@ public class QuitPlanAPI {
             @PathVariable Long accountId,
             @PathVariable Long quitPlanId,
             @RequestBody QuitPlanStageCreateRequest request) {
-        // Đảm bảo quitPlanId trong request body khớp với quitPlanId trong path variable
         if (!request.getQuitPlanId().equals(quitPlanId)) {
-            return ResponseEntity.badRequest().build(); // Trả về lỗi nếu không khớp
+            return ResponseEntity.badRequest().build();
         }
         QuitPlanStageDTO createdStage = quitPlanService.createQuitPlanStage(accountId, request);
         return new ResponseEntity<>(createdStage, HttpStatus.CREATED);
