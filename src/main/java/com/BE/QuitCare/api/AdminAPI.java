@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "API của Admin"
+        name = "03. API của Admin"
 )
 @RestController
 @SecurityRequirement(name = "api")

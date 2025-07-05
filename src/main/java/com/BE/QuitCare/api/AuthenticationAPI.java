@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "Api public dùng về tài khoản"
+        name = " 01. Đăng nhập và đăng ký tài khoản"
 )
 @RestController
 @RequestMapping("/api/auth")

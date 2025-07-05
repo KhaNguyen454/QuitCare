@@ -17,7 +17,7 @@ import org.springframework.web.servlet.view.RedirectView; // Để redirect ngư
 import java.util.List;
 
 @Tag(
-        name = "Quản lý Thanh toán và Lịch sử Thanh toán"
+        name = "06.Quản lý Thanh toán và Lịch sử Thanh toán"
 )
 @RestController
 @RequestMapping("/api/v1/payments") // Base URL cho tất cả các API liên quan đến thanh toán
@@ -68,8 +68,8 @@ public class PaymentControllerAPI {
     public RedirectView handleVnPayReturn(HttpServletRequest request) {
         PaymentHistoryDTO paymentResult;
         // Thay thế bằng URL frontend của bạn (Ví dụ: http://localhost:3000/payment-success)
-        String frontendSuccessUrl = "http://localhost:3000/payment-success";
-        String frontendFailUrl = "http://localhost:3000/payment-fail";
+        String frontendSuccessUrl = "http://http://localhost:8080/payment-success";
+        String frontendFailUrl = "http://localhost:8080/payment-fail";
 
         try {
             paymentResult = membershipPaymentService.handleVnPayReturn(request);

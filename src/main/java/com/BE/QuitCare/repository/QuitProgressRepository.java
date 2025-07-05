@@ -12,4 +12,6 @@ public interface QuitProgressRepository extends JpaRepository<Quitprogress, Long
     List<Quitprogress> findTop3BySmokingStatusOrderByDateDesc(SmokingStatus status);
 
     boolean existsBySmokingStatus_IdAndDate(Long smokingStatusId, LocalDate date);
+
+    List<Quitprogress> findBySmokingStatus_IdOrderByDateDesc(Long smokingStatusId);
 }

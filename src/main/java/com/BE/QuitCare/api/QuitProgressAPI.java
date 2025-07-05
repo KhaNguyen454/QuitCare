@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Tag(
-        name = "Main Flow theo dõi tiến trình cai thuốc"
+        name = "10. Main Flow theo dõi tiến trình cai thuốc"
 )
 
 @RestController
@@ -51,23 +51,17 @@ public class  QuitProgressAPI
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<Quitprogress> update(@PathVariable Long id, @RequestBody Quitprogress updated) {
-        Quitprogress result = service.update(id, updated);
-        return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+    public ResponseEntity<Quitprogress> update(@PathVariable Long id, @RequestBody QuitProgressDTO dto) {
+        Quitprogress result = service.update(id, dto);
+        return ResponseEntity.ok(result);
     }
-    @GetMapping("/check-missed")
-    public ResponseEntity<?> checkMissed(
-            @RequestParam Long smokingStatusId,
-            @RequestParam String date // ISO: yyyy-MM-dd
-    ) {
-        LocalDate localDate = LocalDate.parse(date);
-        Quitprogress result = service.checkAndMarkMissed(smokingStatusId, localDate);
 
-        if (result == null) {
-            return ResponseEntity.ok("Đã có bản ghi trong ngày, không cần đánh dấu missed.");
-        }
-        return ResponseEntity.ok("Đã đánh dấu missed cho ngày " + date);
+    @GetMapping("/check-auto-missed")
+    public ResponseEntity<?> autoCheckMissed(@RequestParam Long smokingStatusId) {
+        List<Quitprogress> missedList = service.autoCheckMissedDays(smokingStatusId);
+        return ResponseEntity.ok("Đã tạo " + missedList.size() + " bản ghi missed.");
     }
+
 
 
     @PostMapping("/generate-notification/{progressId}")

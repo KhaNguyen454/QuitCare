@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "Booking"
+        name = "14. Booking"
 )
 @RestController
 @SecurityRequirement(name = "api")

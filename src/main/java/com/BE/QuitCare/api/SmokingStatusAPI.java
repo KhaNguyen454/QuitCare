@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "Tình trạng hút thuốc ban đầu"
+        name = "08. Tình trạng hút thuốc ban đầu"
 )
 @RestController
 @RequestMapping("/api/smoking-status")

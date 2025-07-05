@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "Bình luận của bài post"
+        name = "12.Bình luận của bài post"
 )
 @RestController
 @RequestMapping("/api/comments")

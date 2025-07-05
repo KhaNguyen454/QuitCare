@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(
-        name = "API của các User trong hệ thống"
+        name = "04. API của các User trong hệ thống"
 )
 @RestController
 @SecurityRequirement(name ="api")

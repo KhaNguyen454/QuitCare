@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(
-        name = "Các bài post của hệ thống"
+        name = "11.Các bài post của hệ thống"
 )
 @RestController
 @RequestMapping("/api/community-posts")

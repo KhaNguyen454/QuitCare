@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 @Tag(
-        name = "Main Flow lập kế hoạch cái thuốc "
+        name = "09. Main Flow lập kế hoạch cái thuốc "
 )
 
 @RestController

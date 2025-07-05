@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 
 @Tag(
-        name = "Đăng nhập bẳng Google"
+        name = "02. Đăng nhập bẳng Google"
 )
 @RestController
 @RequestMapping("/api/auth/oauth2")
