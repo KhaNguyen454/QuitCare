@@ -21,13 +21,10 @@ public class MembershipPlan {
     private String name;
     private Long price;
     private String description;
-    //Thời lượng của gói
     private Duration duration;
-
     private LocalDateTime createdAt = LocalDateTime.now();
     @Column(nullable = false)
     private Boolean deleted = false;
-
 
     @PrePersist
     protected void onCreate() {

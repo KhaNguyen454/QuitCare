@@ -23,7 +23,7 @@ public class MembershipPlanService {
         dto.setName(entity.getName());
         dto.setPrice(entity.getPrice());
         dto.setDescription(entity.getDescription());
-        dto.setDuration(entity.getDuration()); // <-- THÊM DÒNG NÀY
+        dto.setDuration(entity.getDuration());
         return dto;
     }
 

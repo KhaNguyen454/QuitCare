@@ -1,120 +1,156 @@
 package com.BE.QuitCare.service;
 
-import com.BE.QuitCare.config.VNPAYConfig;
+import com.BE.QuitCare.dto.request.PaymentInitiateRequest;
+import com.BE.QuitCare.entity.Account;
+import com.BE.QuitCare.entity.MembershipPlan;
+import com.BE.QuitCare.entity.PaymentHistory;
+import com.BE.QuitCare.entity.UserMembership;
+import com.BE.QuitCare.enums.MembershipStatus;
+import com.BE.QuitCare.enums.PaymentStatus;
+import com.BE.QuitCare.enums.Role;
+import com.BE.QuitCare.exception.NotFoundException;
+import com.BE.QuitCare.repository.AuthenticationRepository;
+import com.BE.QuitCare.repository.MembershipPlanRepository;
+import com.BE.QuitCare.repository.PaymentHistoryRepository;
+import com.BE.QuitCare.repository.UserMembershipRepository;
+import com.BE.QuitCare.utils.AccountUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class VNPAYService {
+    @Value("${vnpay.tmnCode}")
+    private String vnp_TmnCode;
 
+    @Value("${vnpay.hashSecret}")
+    private String vnp_HashSecret;
 
-    public String createOrder(HttpServletRequest request, long amount, String orderInfo, String urlReturn)
+    @Value("${vnpay.payUrl}")
+    private String vnp_PayUrl;
+
+    @Value("${vnpay.returnUrl}")
+    private String vnp_ReturnUrl;
+
+    @Autowired
+    AccountUtils accountUtils;
+    @Autowired
+    MembershipPlanRepository membershipPlanRepository;
+    @Autowired
+    UserMembershipRepository userMembershipRepository;
+    @Autowired
+    PaymentHistoryRepository paymentRepository;
+    @Autowired
+    AuthenticationRepository accountRepository;
+
+    public String createVNPayUrl(String packageId,String paymentId, long amount, String clientIp)
             throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
 
-        String vnp_Version = "2.1.0";
-        String vnp_Command = "pay";
-        String vnp_TxnRef = VNPAYConfig.getRandomNumber(8); // Mã giao dịch của hệ thống bạn
-        String vnp_IpAddr = VNPAYConfig.getIpAddress(request); // Lấy IP từ request
-        String vnp_TmnCode = VNPAYConfig.vnp_TmnCode;
-        String orderType = "other"; // Hoặc "billpayment" tùy loại hình dịch vụ
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String createDate = LocalDateTime.now().format(formatter);
+        String orderIdVnPay = UUID.randomUUID().toString().substring(0, 8);
 
-        Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
-        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", orderInfo);
-        vnp_Params.put("vnp_OrderType", orderType);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount * 100)); // Số tiền nhân 100 ở đây
+        Map<String, String> vnpParams = new TreeMap<>();
+        vnpParams.put("vnp_Version", "2.1.0");
+        vnpParams.put("vnp_Command", "pay");
+        vnpParams.put("vnp_TmnCode", vnp_TmnCode);
+        vnpParams.put("vnp_Locale", "vn");
+        vnpParams.put("vnp_CurrCode", "VND");
+        vnpParams.put("vnp_TxnRef", orderIdVnPay);
+        vnpParams.put("vnp_OrderInfo", "Thanh toán cho mã GD: " + packageId);
+        vnpParams.put("vnp_OrderType", "other");
+        vnpParams.put("vnp_Amount", String.valueOf(amount * 100)); // đúng định dạng: nhân 100
+        vnpParams.put("vnp_ReturnUrl", vnp_ReturnUrl + "?packageID=" + packageId + "?paymentID=" + paymentId) ;
+        vnpParams.put("vnp_CreateDate", createDate);
+        vnpParams.put("vnp_IpAddr", clientIp);
 
-        vnp_Params.put("vnp_ReturnUrl", urlReturn); // URL trả về đã được truyền từ MembershipPaymentService
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-
-        cld.add(Calendar.MINUTE, 15); // Thời gian hết hạn 15 phút
-        String vnp_ExpireDate = formatter.format(cld.getTime());
-        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
-
-
-        // Sắp xếp các tham số và tạo chuỗi hash
-        List fieldNames = new ArrayList(vnp_Params.keySet());
-        Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) vnp_Params.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                // Build hash data
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                // Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                if (itr.hasNext()) {
-                    query.append('&');
-                    hashData.append('&');
-                }
-            }
+        // Build data to hash
+        StringBuilder signDataBuilder = new StringBuilder();
+        for (Map.Entry<String, String> entry : vnpParams.entrySet()) {
+            signDataBuilder.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.toString()));
+            signDataBuilder.append("=");
+            signDataBuilder.append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8.toString()));
+            signDataBuilder.append("&");
         }
-        String queryUrl = query.toString();
-        String salt = VNPAYConfig.vnp_HashSecret;
-        String vnp_SecureHash = VNPAYConfig.hmacSHA512(salt, hashData.toString()); // Sử dụng VNPAYConfig.hmacSHA512
-        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+        signDataBuilder.deleteCharAt(signDataBuilder.length() - 1); // Remove last '&'
 
-        String paymentUrl = VNPAYConfig.vnp_PayUrl + "?" + queryUrl;
-        return paymentUrl;
+        String signData = signDataBuilder.toString();
+        String signed = generateHMAC(vnp_HashSecret, signData);
+        vnpParams.put("vnp_SecureHash", signed);
+
+        // Build payment URL
+        StringBuilder urlBuilder = new StringBuilder(vnp_PayUrl).append("?");
+        for (Map.Entry<String, String> entry : vnpParams.entrySet()) {
+            urlBuilder.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.toString()));
+            urlBuilder.append("=");
+            urlBuilder.append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8.toString()));
+            urlBuilder.append("&");
+        }
+        urlBuilder.deleteCharAt(urlBuilder.length() - 1); // Remove last '&'
+
+        return urlBuilder.toString();
     }
 
-    /**
-     * Xử lý kết quả trả về từ VNPAY (sau khi người dùng thanh toán xong).
-     * @param request HttpServletRequest chứa các tham số VNPAY trả về.
-     * @return 1 nếu thanh toán thành công và chữ ký hợp lệ, 0 nếu thất bại, -1 nếu chữ ký không hợp lệ.
-     */
-    public int orderReturn(HttpServletRequest request){
-        Map<String, String> fields = new HashMap<>();
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
-            String fieldName = params.nextElement();
-            String fieldValue = request.getParameter(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                fields.put(fieldName, fieldValue);
-            }
-        }
+    private String generateHMAC(String secretKey, String signData)
+            throws NoSuchAlgorithmException, InvalidKeyException {
+        Mac hmacSha512 = Mac.getInstance("HmacSHA512");
+        SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+        hmacSha512.init(keySpec);
+        byte[] hmacBytes = hmacSha512.doFinal(signData.getBytes(StandardCharsets.UTF_8));
 
-        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        if (fields.containsKey("vnp_SecureHashType")) {
-            fields.remove("vnp_SecureHashType");
+        StringBuilder result = new StringBuilder();
+        for (byte b : hmacBytes) {
+            result.append(String.format("%02x", b));
         }
-        if (fields.containsKey("vnp_SecureHash")) {
-            fields.remove("vnp_SecureHash");
-        }
+        return result.toString();
+    }
+    public PaymentHistory setStatus(PaymentInitiateRequest request){
+        MembershipPlan membershipPlan = membershipPlanRepository.findById(request.getMembershipPlanId())
+                .orElseThrow(() -> new NotFoundException("Không thể tìm thấy gói"));
+        PaymentHistory paymentHistory = paymentRepository.findById(request.getPaymentId())
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy Payment!"));
+        paymentHistory.setStatus(request.getPaymentStatus());
+        Account currentAccount = accountUtils.getCurrentAccount();
+        UserMembership userMembership = new UserMembership();
+        userMembership.setAccount(currentAccount);
 
-        String signValue = VNPAYConfig.hashAllFields(fields); // Sử dụng VNPAYConfig.hashAllFields
-        if (signValue.equals(vnp_SecureHash)) {
-            if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
-                return 1;
-            } else {
-                return 0;
-            }
-        } else {
-            return -1;
+        userMembership.setStartDate(LocalDateTime.now());
+        userMembership.setEndDate(LocalDateTime.now().plus(membershipPlan.getDuration()));
+
+        userMembershipRepository.save(userMembership);
+        userMembership.setMembershipPlan(membershipPlan);
+        paymentHistory.setUserMembership(userMembership);
+        return paymentRepository.save(paymentHistory);
+    }
+
+    public String buyMembershipPlan(long membershipPlanId, String clientId) {
+        MembershipPlan membershipPlan = membershipPlanRepository.findById(membershipPlanId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy gói!"));
+
+        PaymentHistory paymentHistory = new PaymentHistory();
+        paymentHistory.setStatus(PaymentStatus.PENDING);
+        paymentHistory.setCreatedAt(LocalDateTime.now());
+        paymentHistory.setAmountPaid(membershipPlan.getPrice());
+        paymentRepository.save(paymentHistory);
+        try {
+    return createVNPayUrl(String.valueOf(membershipPlanId),String.valueOf(paymentHistory.getId()), (long) paymentHistory.getAmountPaid(), clientId);
+        } catch (Exception e) {
+            throw new NotFoundException("Không thể tạo URL!");
         }
     }
 }

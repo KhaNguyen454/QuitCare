@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minidev.json.annotate.JsonIgnore;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,7 +29,8 @@ public class UserMembership {
     private MembershipStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "account_id", nullable = false)
+    @JsonIgnore
     private Account account;
 
     @ManyToOne

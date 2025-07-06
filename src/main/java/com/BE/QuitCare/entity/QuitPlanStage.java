@@ -18,7 +18,7 @@ public class QuitPlanStage {
 
     int stageNumber;
 
-    String week_range;
+    String week_range; // Mô tả từ tuần bao nhiêu đến tuần bao nhiêu.
 
     @Column(nullable = false)
     Long reductionPercentage;
@@ -27,9 +27,9 @@ public class QuitPlanStage {
     Long targetCigarettes;
 
     @Column(nullable = false)
-    int durationInWeeks;
+    int durationInWeeks;// Số lượng tuần ở trong 1 Stage
 
-    private LocalDateTime completionDate;
+    private LocalDateTime completionDate;// ngày kết thúc của stage đó
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quit_plan_id", nullable = false)

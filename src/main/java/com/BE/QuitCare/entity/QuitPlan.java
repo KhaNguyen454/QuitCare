@@ -25,7 +25,6 @@ public class QuitPlan {
 
     boolean isSystemPlan;
 
-    // Đổi tên từ localDateTime thành startDate
     private LocalDateTime startDate; // Ngày bắt đầu thực tế của kế hoạch
 
     private LocalDateTime endDate; // Ngày kết thúc thực tế của kế hoạch

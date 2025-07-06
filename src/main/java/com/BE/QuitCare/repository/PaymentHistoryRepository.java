@@ -14,5 +14,4 @@ public interface PaymentHistoryRepository extends JpaRepository<PaymentHistory, 
 
     List<PaymentHistory> findByUserMembershipIdOrderByCreatedAtDesc(Long userMembershipId);
 
-    Optional<PaymentHistory> findByVnpTxnRef(String vnpTxnRef);
 }
