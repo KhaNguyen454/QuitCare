@@ -13,6 +13,10 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "date", "start"})
+)
+
 public class SessionUser
 {
     @Id

@@ -4,6 +4,7 @@ import com.BE.QuitCare.dto.*;
 import com.BE.QuitCare.dto.request.*;
 import com.BE.QuitCare.dto.response.AccountResponse;
 import com.BE.QuitCare.entity.Account;
+import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.exception.AuthenticationException;
 import com.BE.QuitCare.exception.BadRequestException;
 import com.BE.QuitCare.repository.AuthenticationRepository;
@@ -149,6 +150,20 @@ public class AuthenticationService implements UserDetailsService {
         }
 
         return (Account) principal;
+    }
+
+    public List<CoachInfoDTO> getAllCoaches() {
+        List<Account> coaches = authenticationRepository.findByRole(Role.COACH);
+
+        return coaches.stream().map(account -> {
+            CoachInfoDTO dto = new CoachInfoDTO();
+            dto.setId(account.getId());
+            dto.setFullName(account.getFullName());
+            dto.setEmail(account.getEmail());
+            dto.setGender(account.getGender() != null ? account.getGender().name() : null);
+            dto.setAvatar(account.getAvatar());
+            return dto;
+        }).toList();
     }
 
 

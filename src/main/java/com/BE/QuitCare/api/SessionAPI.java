@@ -1,10 +1,9 @@
 package com.BE.QuitCare.api;
 
-import com.BE.QuitCare.dto.RegisterSessionDTO;
-import com.BE.QuitCare.dto.RemoveSessionDTO;
-import com.BE.QuitCare.dto.SessionUserDTO;
+import com.BE.QuitCare.dto.*;
 import com.BE.QuitCare.entity.Session;
 import com.BE.QuitCare.entity.SessionUser;
+import com.BE.QuitCare.service.AuthenticationService;
 import com.BE.QuitCare.service.SessionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Tag(
-        name = "Đăng ký lịch làm của bác sĩ"
+        name = "đăng ký lịch tư vấn của Customer và lịch làm của Coach"
 )
 @RestController
 @RequestMapping("/api/session")
@@ -27,17 +26,15 @@ public class SessionAPI
 
     @Autowired
     SessionService sessionService;
+    @Autowired
+    AuthenticationService authenticationService;
 
-    @GetMapping("/templates")
-    public ResponseEntity<List<Session>> getTemplates() {
-        return ResponseEntity.ok(sessionService.getTemplates());
+    @PutMapping("/availability-day")
+    public ResponseEntity<String> updateAvailabilityDay(@RequestBody RemoveSessionDTO dto) {
+        sessionService.updateAvailabilityDay(dto);
+        return ResponseEntity.ok("Đã cập nhật trạng thái nghỉ thành công cho ngày " + dto.getDate());
     }
 
-    @DeleteMapping("/remove-day")
-    public ResponseEntity<String> removeWorkingDay(@RequestBody RemoveSessionDTO dto) {
-        sessionService.removeWorkingDay(dto);
-        return ResponseEntity.ok("Đã xin nghỉ thành công cho ngày " + dto.getDate());
-    }
 
     @GetMapping("/working-days")
     public ResponseEntity<List<SessionUserDTO>> getWorkingSessionsForCoach(
@@ -57,6 +54,22 @@ public class SessionAPI
         List<SessionUserDTO> sessions = sessionService.getAvailableSessionsForBooking(coachId, from, to);
         return ResponseEntity.ok(sessions);
     }
+
+    @GetMapping("/work-stats")
+    public ResponseEntity<WorkDayStatsDTO> getWorkDayStats(
+            @RequestParam Long coachId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        WorkDayStatsDTO stats = sessionService.getWorkDayStats(coachId, from, to);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/coaches")
+    public ResponseEntity<List<CoachInfoDTO>> getAllCoaches() {
+        return ResponseEntity.ok(authenticationService.getAllCoaches());
+    }
+
 
 
 
