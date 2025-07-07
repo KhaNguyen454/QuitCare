@@ -30,10 +30,7 @@ public class PaymentControllerAPI {
     VNPAYService vnpayService;
 
     @Autowired
-    private PaymentHistoryService paymentHistoryService; // Service cho CRUD lịch sử thanh toán
-
-    // --- Điểm cuối API cho việc khởi tạo và xử lý thanh toán VNPAY ---
-
+    private PaymentHistoryService paymentHistoryService;
 
     @PostMapping("/buy/{packageId}")
     public ResponseEntity buyPackage(@PathVariable long packageId,
@@ -52,6 +49,7 @@ public class PaymentControllerAPI {
     public ResponseEntity setStatus(@RequestBody PaymentInitiateRequest request) {
         return ResponseEntity.ok(vnpayService.setStatus(request));
     }
+
     // --- Điểm cuối API cho Lịch sử Thanh toán (CRUD) ---
 
     /**

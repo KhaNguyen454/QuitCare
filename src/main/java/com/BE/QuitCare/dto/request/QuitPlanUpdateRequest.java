@@ -9,5 +9,4 @@ import java.time.LocalDateTime;
 public class QuitPlanUpdateRequest {
     private Boolean isSystemPlan; // Cho phép thay đổi loại kế hoạch
     private QuitPlanStatus quitPlanStatus; // Cho phép cập nhật trạng thái
-    private LocalDateTime startDate; // Cho phép cập nhật ngày bắt đầu
 }
