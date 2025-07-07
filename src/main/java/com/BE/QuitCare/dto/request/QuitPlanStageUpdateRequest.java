@@ -6,6 +6,4 @@ import lombok.Data;
 public class QuitPlanStageUpdateRequest {
     private String week_range;
     private Long targetCigarettes;
-    private int durationInWeeks;
-    private Boolean markAsCompleted;
 }

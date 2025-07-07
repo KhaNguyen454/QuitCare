@@ -17,7 +17,6 @@ public class QuitPlanStage {
     private Long id;
 
     int stageNumber;
-
     String week_range;
 
     @Column(nullable = false)
@@ -25,11 +24,6 @@ public class QuitPlanStage {
 
     @Column(nullable = false)
     Long targetCigarettes;
-
-    @Column(nullable = false)
-    int durationInWeeks;
-
-    private LocalDateTime completionDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quit_plan_id", nullable = false)

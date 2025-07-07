@@ -1,4 +1,4 @@
- package com.BE.QuitCare.service;
+package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.*;
 import com.BE.QuitCare.dto.request.QuitPlanCreateRequest;
@@ -19,9 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,167 +47,79 @@ public class QuitPlanService {
         Account account = authenticationRepository.findById(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tài khoản với ID: " + accountId));
 
+        // Kiểm tra xem tài khoản đã có QuitPlan nào chưa (đảm bảo chỉ có 1 kế hoạch tại 1 thời điểm)
         if (quitPlanRepository.findByAccountId(accountId).isPresent()) {
             throw new IllegalArgumentException("Tài khoản đã có một kế hoạch cai nghiện đang tồn tại (nháp hoặc hoạt động).");
         }
 
+        // Lấy thông tin SmokingStatus của người dùng để tính mức độ nghiện
         SmokingStatus smokingStatus = smokingStatusRepository.findByAccountId(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tình trạng hút thuốc cho tài khoản ID: " + accountId + ". Vui lòng điền thông tin tình trạng hút thuốc trước."));
 
         QuitPlan quitPlan = new QuitPlan();
         quitPlan.setAccount(account);
         quitPlan.setSystemPlan(request.isSystemPlan());
-        quitPlan.setStartDate(null);
-        quitPlan.setEndDate(null);
-        quitPlan.setQuitPlanStatus(QuitPlanStatus.DRAFT);
+        quitPlan.setLocalDateTime(LocalDateTime.now());
+        quitPlan.setQuitPlanStatus(QuitPlanStatus.DRAFT); // Trạng thái mặc định khi tạo là NHÁP
 
+        // Tính toán AddictionLevel (Mức độ nghiện)
         quitPlan.setAddictionLevel(calculateAddictionLevel(smokingStatus));
 
         QuitPlan savedQuitPlan = quitPlanRepository.save(quitPlan);
 
+        // Nếu là kế hoạch do hệ thống đề xuất, tự động tạo các giai đoạn
         if (request.isSystemPlan()) {
             generateSystemQuitPlanStages(savedQuitPlan, smokingStatus.getCigarettes_per_day());
         }
 
-        QuitPlanDTO dto = modelMapper.map(savedQuitPlan, QuitPlanDTO.class);
-        dto.setAccountId(accountId);
-        dto.setStages(savedQuitPlan.getStages().stream()
-                .map(stage -> modelMapper.map(stage, QuitPlanStageDTO.class))
-                .collect(Collectors.toList()));
-        return dto;
+        // Ánh xạ sang DTO và trả về
+        return modelMapper.map(savedQuitPlan, QuitPlanDTO.class);
     }
-
-    /**
-     * Đặt ngày bắt đầu cho kế hoạch cai nghiện.
-     * Kế hoạch phải ở trạng thái DRAFT. Sau khi đặt, trạng thái sẽ chuyển sang ACTIVE.
-     * Đồng thời, tính toán và đặt endDate dự kiến dựa trên tổng thời lượng các giai đoạn.
-     * @param accountId ID của tài khoản.
-     * @param quitPlanId ID của kế hoạch cai nghiện.
-     * @param startDate Ngày bắt đầu mới.
-     * @return QuitPlanDTO đã cập nhật.
-     * @throws EntityNotFoundException nếu không tìm thấy kế hoạch.
-     * @throws SecurityException nếu kế hoạch không thuộc về tài khoản.
-     * @throws IllegalArgumentException nếu kế hoạch không ở trạng thái DRAFT hoặc startDate không hợp lệ.
-     */
-    @Transactional
-    public QuitPlanDTO setQuitPlanStartDate(Long accountId, Long quitPlanId, LocalDateTime startDate) {
-        QuitPlan quitPlan = quitPlanRepository.findById(quitPlanId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện với ID: " + quitPlanId));
-
-        if (!quitPlan.getAccount().getId().equals(accountId)) {
-            throw new SecurityException("Bạn không có quyền cập nhật kế hoạch cai nghiện này.");
-        }
-
-        if (quitPlan.getQuitPlanStatus() != QuitPlanStatus.DRAFT) {
-            throw new IllegalArgumentException("Chỉ có thể đặt ngày bắt đầu cho kế hoạch ở trạng thái NHÁP.");
-        }
-        if (startDate == null || startDate.isBefore(LocalDateTime.now().minusDays(1))) {
-            throw new IllegalArgumentException("Ngày bắt đầu không hợp lệ. Phải là ngày hiện tại hoặc tương lai gần.");
-        }
-
-        quitPlan.setStartDate(startDate);
-        quitPlan.setQuitPlanStatus(QuitPlanStatus.ACTIVE);
-
-        // Tính toán endDate dự kiến dựa trên tổng thời lượng của các giai đoạn
-        long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-        if (totalWeeks > 0) {
-            quitPlan.setEndDate(startDate.plusWeeks(totalWeeks));
-        } else {
-            // Nếu không có giai đoạn nào, endDate có thể là startDate (hoặc null nếu bạn muốn)
-            quitPlan.setEndDate(startDate);
-        }
-
-        QuitPlan savedQuitPlan = quitPlanRepository.save(quitPlan);
-        QuitPlanDTO dto = modelMapper.map(savedQuitPlan, QuitPlanDTO.class);
-        dto.setAccountId(accountId);
-        dto.setStages(savedQuitPlan.getStages().stream()
-                .map(stage -> modelMapper.map(stage, QuitPlanStageDTO.class))
-                .collect(Collectors.toList()));
-        return dto;
-    }
-
 
     public QuitPlanDTO getQuitPlanByAccountId(Long accountId) {
         QuitPlan quitPlan = quitPlanRepository.findByAccountId(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện cho tài khoản ID: " + accountId));
-
-        QuitPlanDTO dto = modelMapper.map(quitPlan, QuitPlanDTO.class);
-        dto.setAccountId(accountId);
-        dto.setStages(quitPlan.getStages().stream()
-                .map(stage -> modelMapper.map(stage, QuitPlanStageDTO.class))
-                .collect(Collectors.toList()));
-        return dto;
+        return modelMapper.map(quitPlan, QuitPlanDTO.class);
     }
 
     @Transactional
     public QuitPlanDTO updateQuitPlan(Long accountId, Long quitPlanId, QuitPlanUpdateRequest request) {
+        // 1. Tìm kế hoạch cai nghiện
         QuitPlan quitPlan = quitPlanRepository.findById(quitPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện với ID: " + quitPlanId));
 
+        // 2. Đảm bảo kế hoạch thuộc về tài khoản đã xác thực
         if (!quitPlan.getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền cập nhật kế hoạch cai nghiện này.");
         }
 
+        // 3. Chỉ cho phép cập nhật nếu kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
         if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.COMPLETED || quitPlan.getQuitPlanStatus() == QuitPlanStatus.CANCEL) {
             throw new IllegalArgumentException("Không thể cập nhật kế hoạch cai nghiện đã hoàn thành hoặc đã hủy.");
         }
 
+        // 4. Cập nhật trạng thái kế hoạch nếu được cung cấp
         if (request.getQuitPlanStatus() != null) {
             quitPlan.setQuitPlanStatus(request.getQuitPlanStatus());
         }
 
-        // Cập nhật ngày bắt đầu nếu được cung cấp (chỉ khi kế hoạch là DRAFT hoặc ACTIVE)
-        if (request.getStartDate() != null) {
-            if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.COMPLETED || quitPlan.getQuitPlanStatus() == QuitPlanStatus.CANCEL) {
-                throw new IllegalArgumentException("Không thể thay đổi ngày bắt đầu cho kế hoạch đã hoàn thành hoặc đã hủy.");
-            }
-            if (request.getStartDate().isBefore(LocalDateTime.now().minusDays(1))) {
-                throw new IllegalArgumentException("Ngày bắt đầu không hợp lệ. Phải là ngày hiện tại hoặc tương lai gần.");
-            }
-            quitPlan.setStartDate(request.getStartDate());
-            if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.DRAFT) {
-                quitPlan.setQuitPlanStatus(QuitPlanStatus.ACTIVE);
-            }
-            // Cập nhật lại endDate dự kiến nếu startDate thay đổi
-            long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-            if (totalWeeks > 0) {
-                quitPlan.setEndDate(request.getStartDate().plusWeeks(totalWeeks));
-            } else {
-                quitPlan.setEndDate(request.getStartDate());
-            }
-        }
-
-
+        // 5. Xử lý thay đổi loại kế hoạch (Hệ thống <-> Người dùng tự tạo)
         if (request.getIsSystemPlan() != null && quitPlan.isSystemPlan() != request.getIsSystemPlan()) {
-            if (!quitPlan.isSystemPlan() && request.getIsSystemPlan()) {
+            if (!quitPlan.isSystemPlan() && request.getIsSystemPlan()) { // Chuyển từ người dùng tự tạo sang hệ thống
                 SmokingStatus smokingStatus = smokingStatusRepository.findByAccountId(accountId)
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tình trạng hút thuốc cho tài khoản ID: " + accountId));
-                quitPlanStageRepository.deleteAll(quitPlan.getStages());
-                quitPlan.getStages().clear();
-                generateSystemQuitPlanStages(quitPlan, smokingStatus.getCigarettes_per_day());
+                quitPlanStageRepository.deleteAll(quitPlan.getStages()); // Xóa các giai đoạn hiện có
+                quitPlan.getStages().clear(); // Rất quan trọng để xóa trong bộ nhớ
+                generateSystemQuitPlanStages(quitPlan, smokingStatus.getCigarettes_per_day()); // Tạo lại các giai đoạn hệ thống
                 quitPlan.setSystemPlan(true);
-            } else if (quitPlan.isSystemPlan() && !request.getIsSystemPlan()) {
-                quitPlanStageRepository.deleteAll(quitPlan.getStages());
+            } else if (quitPlan.isSystemPlan() && !request.getIsSystemPlan()) { // Chuyển từ hệ thống sang người dùng tự tạo
+                quitPlanStageRepository.deleteAll(quitPlan.getStages()); // Xóa các giai đoạn hiện có
                 quitPlan.getStages().clear();
                 quitPlan.setSystemPlan(false);
             }
-            // Sau khi thay đổi loại kế hoạch, cập nhật lại endDate nếu startDate đã có
-            if (quitPlan.getStartDate() != null) {
-                long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-                if (totalWeeks > 0) {
-                    quitPlan.setEndDate(quitPlan.getStartDate().plusWeeks(totalWeeks));
-                } else {
-                    quitPlan.setEndDate(quitPlan.getStartDate());
-                }
-            }
         }
-        QuitPlan savedQuitPlan = quitPlanRepository.save(quitPlan);
-        QuitPlanDTO dto = modelMapper.map(savedQuitPlan, QuitPlanDTO.class);
-        dto.setAccountId(accountId);
-        dto.setStages(savedQuitPlan.getStages().stream()
-                .map(stage -> modelMapper.map(stage, QuitPlanStageDTO.class))
-                .collect(Collectors.toList()));
-        return dto;
+        // 6. Lưu cập nhật và trả về DTO
+        return modelMapper.map(quitPlanRepository.save(quitPlan), QuitPlanDTO.class);
     }
 
     public void deleteQuitPlan(Long accountId, Long quitPlanId) {
@@ -226,13 +136,16 @@ public class QuitPlanService {
 
     @Transactional
     public QuitPlanStageDTO createQuitPlanStage(Long accountId, QuitPlanStageCreateRequest request) {
+        // 1. Kiểm tra kế hoạch cai nghiện có tồn tại không
         QuitPlan quitPlan = quitPlanRepository.findById(request.getQuitPlanId())
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện với ID: " + request.getQuitPlanId()));
 
+        // 2. Kiểm tra quyền sở hữu
         if (!quitPlan.getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền thêm giai đoạn vào kế hoạch cai nghiện này.");
         }
 
+        // 3. Kiểm tra trạng thái hợp lệ
         if (quitPlan.isSystemPlan()) {
             throw new IllegalArgumentException("Không thể thêm giai đoạn vào kế hoạch hệ thống.");
         }
@@ -241,59 +154,34 @@ public class QuitPlanService {
             throw new IllegalArgumentException("Không thể thêm vào kế hoạch đã hoàn thành hoặc đã hủy.");
         }
 
-        // Validate input
+        // 4. Validate input
         if (request.getTargetCigarettes() == null) {
             throw new IllegalArgumentException("Trường 'targetCigarettes' không được để trống.");
         }
         if (request.getStageNumber() <= 0) {
             throw new IllegalArgumentException("Stage number phải lớn hơn 0.");
         }
-        if (request.getDurationInWeeks() <= 0) { // Đảm bảo thời lượng giai đoạn hợp lệ
-            throw new IllegalArgumentException("Thời lượng giai đoạn phải lớn hơn 0 tuần.");
-        }
 
-        // Kiểm tra tính tuần tự của stageNumber
-        // Lấy lại danh sách stages để đảm bảo tính nhất quán với DB
-        List<QuitPlanStage> existingStages = quitPlanStageRepository.findByQuitPlanIdOrderByStageNumberAsc(quitPlan.getId());
-        Optional<QuitPlanStage> lastStage = existingStages.stream()
-                .max(Comparator.comparingInt(QuitPlanStage::getStageNumber));
-
-        if (lastStage.isPresent() && request.getStageNumber() != lastStage.get().getStageNumber() + 1) {
-            throw new IllegalArgumentException("Stage number phải lớn hơn giai đoạn cuối cùng hiện có một đơn vị.");
-        } else if (!lastStage.isPresent() && request.getStageNumber() != 1) {
-            throw new IllegalArgumentException("Giai đoạn đầu tiên phải có stage number là 1.");
-        }
-
-
+        // 5. Tạo stage
         QuitPlanStage stage = new QuitPlanStage();
         stage.setStageNumber(request.getStageNumber());
         stage.setWeek_range(request.getWeek_range());
         stage.setTargetCigarettes(request.getTargetCigarettes());
-        stage.setDurationInWeeks(request.getDurationInWeeks()); // Set thời lượng giai đoạn
-        stage.setQuitPlan(quitPlan);
+        stage.setQuitPlan(quitPlan); // liên kết kế hoạch
 
+        // 6. Tính toán tỷ lệ giảm
         calculateUserDefinedReductionPercentage(quitPlan, stage);
 
+        // 7. Đảm bảo không bị null để tránh lỗi Hibernate
         if (stage.getReductionPercentage() == null) {
             stage.setReductionPercentage(0L);
         }
 
+        // 8. Lưu vào DB
         QuitPlanStage savedStage = quitPlanStageRepository.save(stage);
 
-        // Cập nhật lại endDate dự kiến của QuitPlan sau khi thêm stage mới
-        if (quitPlan.getStartDate() != null) {
-            long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-            if (totalWeeks > 0) {
-                quitPlan.setEndDate(quitPlan.getStartDate().plusWeeks(totalWeeks));
-            } else {
-                quitPlan.setEndDate(quitPlan.getStartDate());
-            }
-            quitPlanRepository.save(quitPlan); // Lưu lại QuitPlan sau khi cập nhật endDate
-        }
-
-        QuitPlanStageDTO dto = modelMapper.map(savedStage, QuitPlanStageDTO.class);
-        dto.setQuitPlanId(quitPlan.getId());
-        return dto;
+        // 9. Trả kết quả dạng DTO
+        return modelMapper.map(savedStage, QuitPlanStageDTO.class);
     }
 
     public List<QuitPlanStageDTO> getQuitPlanStages(Long accountId, Long quitPlanId) {
@@ -306,11 +194,7 @@ public class QuitPlanService {
 
         return quitPlanStageRepository.findByQuitPlanIdOrderByStageNumberAsc(quitPlanId)
                 .stream()
-                .map(stage -> {
-                    QuitPlanStageDTO dto = modelMapper.map(stage, QuitPlanStageDTO.class);
-                    dto.setQuitPlanId(quitPlanId);
-                    return dto;
-                })
+                .map(stage -> modelMapper.map(stage, QuitPlanStageDTO.class))
                 .collect(Collectors.toList());
     }
 
@@ -319,10 +203,13 @@ public class QuitPlanService {
         QuitPlanStage stage = quitPlanStageRepository.findById(stageId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giai đoạn kế hoạch cai nghiện với ID: " + stageId));
 
+        // Đảm bảo giai đoạn thuộc về kế hoạch của tài khoản đã xác thực
         if (!stage.getQuitPlan().getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền cập nhật giai đoạn kế hoạch cai nghiện này.");
         }
 
+        // Chỉ cho phép cập nhật các giai đoạn của kế hoạch do người dùng tự tạo (isSystemPlan = false)
+        // và khi kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
         if (stage.getQuitPlan().isSystemPlan()) {
             throw new IllegalArgumentException("Không thể cập nhật trực tiếp các giai đoạn của kế hoạch cai nghiện do hệ thống tạo.");
         }
@@ -330,61 +217,12 @@ public class QuitPlanService {
             throw new IllegalArgumentException("Không thể cập nhật các giai đoạn của kế hoạch cai nghiện đã hoàn thành hoặc đã hủy.");
         }
 
-        // Cập nhật các trường nếu được cung cấp trong request
-        if (request.getWeek_range() != null) {
-            stage.setWeek_range(request.getWeek_range());
-        }
-        if (request.getTargetCigarettes() != null) {
-            stage.setTargetCigarettes(request.getTargetCigarettes());
-        }
-        if (request.getDurationInWeeks() > 0) { // Cập nhật thời lượng giai đoạn
-            stage.setDurationInWeeks(request.getDurationInWeeks());
-        }
-
-        // Xử lý khi đánh dấu giai đoạn hoàn thành
-        if (request.getMarkAsCompleted() != null && request.getMarkAsCompleted()) {
-            if (stage.getCompletionDate() == null) {
-                stage.setCompletionDate(LocalDateTime.now());
-                // Kiểm tra xem đây có phải là giai đoạn cuối cùng không
-                List<QuitPlanStage> allStages = quitPlanStageRepository.findByQuitPlanIdOrderByStageNumberAsc(stage.getQuitPlan().getId());
-                Optional<QuitPlanStage> lastStage = allStages.stream()
-                        .max(Comparator.comparingInt(QuitPlanStage::getStageNumber));
-
-                if (lastStage.isPresent() && lastStage.get().getId().equals(stage.getId())) {
-                    // Đây là giai đoạn cuối cùng, cập nhật endDate cho QuitPlan
-                    QuitPlan quitPlan = stage.getQuitPlan();
-                    if (quitPlan.getStartDate() == null) {
-                        throw new IllegalStateException("Kế hoạch chưa có ngày bắt đầu. Vui lòng đặt ngày bắt đầu trước khi hoàn thành giai đoạn cuối.");
-                    }
-                    // Tính tổng thời lượng của kế hoạch dựa trên các giai đoạn đã hoàn thành
-                    long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-                    quitPlan.setEndDate(quitPlan.getStartDate().plusWeeks(totalWeeks)); // Đặt endDate dựa trên tổng thời lượng
-                    quitPlan.setQuitPlanStatus(QuitPlanStatus.COMPLETED);
-                    quitPlanRepository.save(quitPlan);
-                }
-            }
-        }
-
+        stage.setWeek_range(request.getWeek_range());
+        stage.setTargetCigarettes(request.getTargetCigarettes());
+        // Tính toán lại reductionPercentage sau khi cập nhật targetCigarettes
         calculateUserDefinedReductionPercentage(stage.getQuitPlan(), stage);
 
-        QuitPlanStage savedStage = quitPlanStageRepository.save(stage);
-
-        // Sau khi cập nhật stage, cập nhật lại endDate dự kiến của QuitPlan nếu cần
-        QuitPlan quitPlan = savedStage.getQuitPlan();
-        if (quitPlan.getStartDate() != null && quitPlan.getQuitPlanStatus() == QuitPlanStatus.ACTIVE) {
-            long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-            if (totalWeeks > 0) {
-                quitPlan.setEndDate(quitPlan.getStartDate().plusWeeks(totalWeeks));
-            } else {
-                quitPlan.setEndDate(quitPlan.getStartDate());
-            }
-            quitPlanRepository.save(quitPlan);
-        }
-
-
-        QuitPlanStageDTO dto = modelMapper.map(savedStage, QuitPlanStageDTO.class);
-        dto.setQuitPlanId(savedStage.getQuitPlan().getId());
-        return dto;
+        return modelMapper.map(quitPlanStageRepository.save(stage), QuitPlanStageDTO.class);
     }
 
     public void deleteQuitPlanStage(Long accountId, Long stageId) {
@@ -395,6 +233,8 @@ public class QuitPlanService {
             throw new SecurityException("Bạn không có quyền xóa giai đoạn kế hoạch cai nghiện này.");
         }
 
+        // Chỉ cho phép xóa các giai đoạn của kế hoạch do người dùng tự tạo (isSystemPlan = false)
+        // và khi kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
         if (stage.getQuitPlan().isSystemPlan()) {
             throw new IllegalArgumentException("Không thể xóa trực tiếp các giai đoạn của kế hoạch cai nghiện do hệ thống tạo.");
         }
@@ -403,18 +243,6 @@ public class QuitPlanService {
         }
 
         quitPlanStageRepository.delete(stage);
-
-        // Sau khi xóa stage, cập nhật lại endDate dự kiến của QuitPlan nếu cần
-        QuitPlan quitPlan = stage.getQuitPlan();
-        if (quitPlan.getStartDate() != null && quitPlan.getQuitPlanStatus() == QuitPlanStatus.ACTIVE) {
-            long totalWeeks = calculateQuitPlanTotalDurationInWeeks(quitPlan);
-            if (totalWeeks > 0) {
-                quitPlan.setEndDate(quitPlan.getStartDate().plusWeeks(totalWeeks));
-            } else {
-                quitPlan.setEndDate(quitPlan.getStartDate());
-            }
-            quitPlanRepository.save(quitPlan);
-        }
     }
 
     // --- Phương thức hỗ trợ ---
@@ -444,89 +272,88 @@ public class QuitPlanService {
             cigarettesPerDayScore = 1;
         } else if (smokingStatus.getCigarettes_per_day() <= 30) {
             cigarettesPerDayScore = 2;
-        } else {
+        } else { // > 30 điếu
             cigarettesPerDayScore = 3;
         }
 
         int totalScore = timeToFirstCigaretteScore + cigarettesPerDayScore;
 
         if (totalScore >= 0 && totalScore <= 2) {
-            return AddictionLevel.LOW;
+            return AddictionLevel.LOW; // Nghiện thực thể nhẹ
         } else if (totalScore >= 3 && totalScore <= 4) {
-            return AddictionLevel.MEDIUM;
-        } else {
-            return AddictionLevel.HIGH;
+            return AddictionLevel.MEDIUM; // Nghiện thực thể trung bình
+        } else { // totalScore >= 5 && totalScore <= 6
+            return AddictionLevel.HIGH; // Nghiện thực thể nặng
         }
     }
 
-    /**
-     * Tạo các giai đoạn kế hoạch cai thuốc tự động cho kế hoạch hệ thống.
-     * @param quitPlan Kế hoạch cai thuốc.
-     * @param initialCigarettesPerDay Số điếu thuốc ban đầu mỗi ngày.
-     */
+
     private void generateSystemQuitPlanStages(QuitPlan quitPlan, int initialCigarettesPerDay) {
         long currentCigarettes = initialCigarettesPerDay;
         int stageNumber = 1;
-        int defaultDurationPerStageWeeks = 4; // Mỗi giai đoạn hệ thống mặc định 4 tuần
 
+        // Xóa tất cả các stage cũ trước khi tạo mới nếu có
         if (quitPlan.getStages() != null) {
             quitPlanStageRepository.deleteAll(quitPlan.getStages());
             quitPlan.getStages().clear();
         }
 
-        while (currentCigarettes > 0) {
+        while (currentCigarettes > 0) { // Tiếp tục tạo cho đến khi số điếu còn 0 hoặc 1
             QuitPlanStage stage = new QuitPlanStage();
             stage.setQuitPlan(quitPlan);
             stage.setStageNumber(stageNumber);
-            stage.setWeek_range("Tuần " + ((stageNumber - 1) * defaultDurationPerStageWeeks + 1) + " - " + (stageNumber * defaultDurationPerStageWeeks));
-            stage.setDurationInWeeks(defaultDurationPerStageWeeks); // Đặt thời lượng cho giai đoạn hệ thống
+            stage.setWeek_range("Tuần " + ((stageNumber - 1) * 4 + 1) + " - " + (stageNumber * 4));
 
             long targetForThisStage = (long) Math.floor(currentCigarettes / 2.0);
-
             long reductionPercentageValue;
+
+            // Mục đích: Tính toán phần trăm giảm từ số lượng điếu thuốc của giai đoạn trước đó đến mục tiêu của giai đoạn hiện tại.
             if (currentCigarettes > 0) {
+                // (currentCigarettes - targetForThisStage) là số điếu thuốc đã giảm.
+                // Chia số này cho currentCigarettes sẽ cho tỷ lệ giảm.
+                // Nhân với 100 và làm tròn sẽ cho phần trăm.
                 reductionPercentageValue = (long) Math.round(((double) (currentCigarettes - targetForThisStage) / currentCigarettes) * 100);
             } else {
+                // Nếu currentCigarettes đã là 0, không có giảm thêm nữa.
+
                 reductionPercentageValue = 0L;
             }
             stage.setReductionPercentage(reductionPercentageValue);
             stage.setTargetCigarettes(targetForThisStage);
 
-            quitPlan.getStages().add(stage);
-            quitPlanStageRepository.save(stage);
+
+            quitPlan.getStages().add(stage); // Thêm vào danh sách trong Entity QuitPlan
+            quitPlanStageRepository.save(stage); // Lưu giai đoạn
 
             currentCigarettes = targetForThisStage;
             stageNumber++;
 
-            if (currentCigarettes <= 1 && currentCigarettes > 0) {
+            if (currentCigarettes <= 1 && currentCigarettes > 0) { // Nếu còn 1 điếu, tạo thêm một giai đoạn cuối cùng để về 0
                 QuitPlanStage finalStage = new QuitPlanStage();
                 finalStage.setQuitPlan(quitPlan);
                 finalStage.setStageNumber(stageNumber);
-                finalStage.setWeek_range("Tuần " + ((stageNumber - 1) * defaultDurationPerStageWeeks + 1) + " - " + (stageNumber * defaultDurationPerStageWeeks));
-                finalStage.setReductionPercentage(100L);
+                finalStage.setWeek_range("Tuần " + ((stageNumber - 1) * 4 + 1) + " - " + (stageNumber * 4));
+                finalStage.setReductionPercentage(100L); // Giảm 100% để về 0
                 finalStage.setTargetCigarettes(0L);
-                finalStage.setDurationInWeeks(defaultDurationPerStageWeeks); // Đặt thời lượng cho giai đoạn cuối
                 quitPlan.getStages().add(finalStage);
                 quitPlanStageRepository.save(finalStage);
-                break;
+                break; // Dừng lại sau khi tạo giai đoạn cuối
             } else if (currentCigarettes == 0) {
-                break;
+                break; // Dừng nếu đã về 0
             }
         }
     }
 
-    /**
-     * Tính toán phần trăm giảm cho giai đoạn do người dùng tự định nghĩa.
-     * @param quitPlan Kế hoạch cai thuốc.
-     * @param currentStage Giai đoạn hiện tại.
-     */
     private void calculateUserDefinedReductionPercentage(QuitPlan quitPlan, QuitPlanStage currentStage) {
         long previousCigarettes = 0;
         if (currentStage.getStageNumber() == 1) {
+            // Đối với giai đoạn đầu tiên, so sánh với số điếu ban đầu từ SmokingStatus
             SmokingStatus smokingStatus = smokingStatusRepository.findByAccountId(quitPlan.getAccount().getId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tình trạng hút thuốc cho tài khoản."));
             previousCigarettes = smokingStatus.getCigarettes_per_day();
         } else {
+            // Đối với các giai đoạn tiếp theo, so sánh với targetCigarettes của giai đoạn trước đó
+            // Đảm bảo các giai đoạn được sắp xếp theo stageNumber
             List<QuitPlanStage> sortedStages = quitPlanStageRepository.findByQuitPlanIdOrderByStageNumberAsc(quitPlan.getId());
             QuitPlanStage previousStage = sortedStages.stream()
                     .filter(s -> s.getStageNumber() == currentStage.getStageNumber() - 1)
@@ -535,6 +362,8 @@ public class QuitPlanService {
             if (previousStage != null) {
                 previousCigarettes = previousStage.getTargetCigarettes();
             } else {
+                // Nếu không tìm thấy giai đoạn trước đó, có thể có vấn đề về dữ liệu hoặc đây là giai đoạn đầu
+                // Xử lý tùy theo logic nghiệp vụ của bạn (ví dụ: lấy từ SmokingStatus ban đầu)
                 SmokingStatus smokingStatus = smokingStatusRepository.findByAccountId(quitPlan.getAccount().getId())
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tình trạng hút thuốc cho tài khoản."));
                 previousCigarettes = smokingStatus.getCigarettes_per_day();
@@ -546,24 +375,11 @@ public class QuitPlanService {
 
         if (previousCigarettes > 0) {
             long reduction = previousCigarettes - currentStage.getTargetCigarettes();
-            if (reduction < 0) reduction = 0;
+            if (reduction < 0) reduction = 0; // Đảm bảo không có giảm âm
             long percentage = (long) Math.round(((double) reduction / previousCigarettes) * 100);
             currentStage.setReductionPercentage(percentage);
         } else {
-            currentStage.setReductionPercentage(0L);
+            currentStage.setReductionPercentage(0L); // Nếu số điếu trước đó là 0, không có giảm
         }
-    }
-
-    /**
-     * Tính tổng thời lượng của kế hoạch cai nghiện dựa trên tổng số tuần của tất cả các giai đoạn.
-     * @param quitPlan Kế hoạch cai nghiện.
-     * @return Tổng số tuần của kế hoạch.
-     */
-    private long calculateQuitPlanTotalDurationInWeeks(QuitPlan quitPlan) {
-        // Lấy lại danh sách các stage từ DB để đảm bảo dữ liệu mới nhất
-        List<QuitPlanStage> stages = quitPlanStageRepository.findByQuitPlanIdOrderByStageNumberAsc(quitPlan.getId());
-        return stages.stream()
-                .mapToLong(QuitPlanStage::getDurationInWeeks)
-                .sum();
     }
 }

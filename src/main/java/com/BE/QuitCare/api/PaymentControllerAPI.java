@@ -2,9 +2,11 @@ package com.BE.QuitCare.api;
 
 
 import com.BE.QuitCare.dto.PaymentHistoryDTO;
+import com.BE.QuitCare.dto.request.PaymentInitiateRequest;
 import com.BE.QuitCare.enums.PaymentStatus;
-import com.BE.QuitCare.service.MembershipPaymentService;
+import com.BE.QuitCare.service.MembershipPlanService;
 import com.BE.QuitCare.service.PaymentHistoryService;
+import com.BE.QuitCare.service.VNPAYService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,67 +27,27 @@ import java.util.List;
 public class PaymentControllerAPI {
 
     @Autowired
-    private MembershipPaymentService membershipPaymentService; // Service cho logic thanh toán VNPAY
+    VNPAYService vnpayService;
 
     @Autowired
-    private PaymentHistoryService paymentHistoryService; // Service cho CRUD lịch sử thanh toán
+    private PaymentHistoryService paymentHistoryService;
 
-    // --- Điểm cuối API cho việc khởi tạo và xử lý thanh toán VNPAY ---
-
-    /**
-     * API để khởi tạo yêu cầu thanh toán VNPAY cho gói thành viên.
-     * Frontend sẽ gọi API này, nhận URL VNPAY và chuyển hướng người dùng đến đó.
-     * URL: POST /api/v1/payments/initiate/{membershipPlanId}/by-account/{accountId}
-     * @param accountId ID của tài khoản người dùng (trong ứng dụng thực tế, nên lấy từ SecurityContext).
-     * @param membershipPlanId ID của gói thành viên muốn mua.
-     * @param request HttpServletRequest để lấy thông tin IP và baseURL.
-     * @return ResponseEntity chứa URL VNPAY để frontend chuyển hướng.
-     */
-    @PostMapping("/initiate/{membershipPlanId}/by-account/{accountId}")
-    public ResponseEntity<String> initiateVnPayPayment(
-            @PathVariable Long accountId,
-            @PathVariable Long membershipPlanId,
-            HttpServletRequest request) {
-        try {
-            String vnpayUrl = membershipPaymentService.initiateVnPayPayment(accountId, membershipPlanId, request);
-            return ResponseEntity.ok(vnpayUrl); // Trả về URL để frontend chuyển hướng
-        } catch (Exception e) {
-            // Log lỗi và trả về lỗi phù hợp
-            System.err.println("Lỗi khởi tạo thanh toán VNPAY: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lỗi khởi tạo thanh toán: " + e.getMessage());
+    @PostMapping("/buy/{packageId}")
+    public ResponseEntity buyPackage(@PathVariable long packageId,
+                                     HttpServletRequest request
+    ) {
+        String clientIP = request.getHeader("X-forwarded-For");
+        if(clientIP == null || clientIP.isEmpty()) {
+            clientIP = request.getRemoteAddr();
         }
+        String URL = vnpayService.buyMembershipPlan(packageId,clientIP);
+
+        return ResponseEntity.ok(URL);
     }
 
-    /**
-     * Endpoint này sẽ được VNPAY gọi lại sau khi người dùng hoàn tất thanh toán.
-     * KHÔNG DÀNH CHO FRONTEND GỌI TRỰC TIẾP.
-     * URL: GET /api/v1/payments/vnpay-return
-     * (Lưu ý: Endpoint này cần được cấu hình permitAll() trong Spring Security)
-     * @param request HttpServletRequest chứa các tham số trả về từ VNPAY.
-     * @return RedirectView chuyển hướng người dùng về frontend với kết quả.
-     */
-    @GetMapping("/vnpay-return")
-    public RedirectView handleVnPayReturn(HttpServletRequest request) {
-        PaymentHistoryDTO paymentResult;
-        // Thay thế bằng URL frontend của bạn (Ví dụ: http://localhost:3000/payment-success)
-        String frontendSuccessUrl = "http://http://localhost:8080/payment-success";
-        String frontendFailUrl = "http://localhost:8080/payment-fail";
-
-        try {
-            paymentResult = membershipPaymentService.handleVnPayReturn(request);
-
-            if (paymentResult.getStatus() == PaymentStatus.SUCCESS) {
-                // Chuyển hướng về trang thành công của frontend, có thể kèm theo transaction ID
-                return new RedirectView(frontendSuccessUrl + "?transactionId=" + paymentResult.getVnpTransactionNo() + "&status=success");
-            } else {
-                // Chuyển hướng về trang thất bại của frontend, có thể kèm theo mã lỗi
-                return new RedirectView(frontendFailUrl + "?status=" + paymentResult.getStatus().name() + "&code=" + paymentResult.getVnpResponseCode());
-            }
-        } catch (Exception e) {
-            // Xử lý ngoại lệ trong quá trình xử lý VNPAY return
-            System.err.println("Lỗi xử lý VNPAY return: " + e.getMessage());
-            return new RedirectView(frontendFailUrl + "?error=" + e.getMessage());
-        }
+    @PostMapping
+    public ResponseEntity setStatus(@RequestBody PaymentInitiateRequest request) {
+        return ResponseEntity.ok(vnpayService.setStatus(request));
     }
 
     // --- Điểm cuối API cho Lịch sử Thanh toán (CRUD) ---
@@ -93,6 +55,7 @@ public class PaymentControllerAPI {
     /**
      * Lấy tất cả lịch sử thanh toán (thường dành cho Admin/Staff).
      * URL: GET /api/v1/payments/history
+     *
      * @return Danh sách PaymentHistoryDTO.
      */
     @GetMapping("/history")
@@ -104,6 +67,7 @@ public class PaymentControllerAPI {
     /**
      * Lấy lịch sử thanh toán theo ID.
      * URL: GET /api/v1/payments/history/{id}
+     *
      * @param id ID của lịch sử thanh toán.
      * @return PaymentHistoryDTO.
      */
@@ -118,6 +82,7 @@ public class PaymentControllerAPI {
      * Lấy lịch sử thanh toán của một tài khoản cụ thể.
      * URL: GET /api/v1/payments/history/account/{accountId}
      * (Trong thực tế, accountId nên được lấy từ SecurityContext để đảm bảo người dùng chỉ xem được lịch sử của mình)
+     *
      * @param accountId ID của tài khoản.
      * @return Danh sách PaymentHistoryDTO.
      */
@@ -130,6 +95,7 @@ public class PaymentControllerAPI {
     /**
      * Lấy lịch sử thanh toán của một gói thành viên cụ thể.
      * URL: GET /api/v1/payments/history/membership/{userMembershipId}
+     *
      * @param userMembershipId ID của UserMembership.
      * @return Danh sách PaymentHistoryDTO.
      */
@@ -142,6 +108,7 @@ public class PaymentControllerAPI {
     /**
      * Xóa lịch sử thanh toán theo ID (thường giới hạn quyền cho Admin).
      * URL: DELETE /api/v1/payments/history/{id}
+     *
      * @param id ID của lịch sử thanh toán.
      * @return ResponseEntity không có nội dung.
      */
