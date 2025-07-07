@@ -35,6 +35,7 @@ public class UserMembership {
 
     @ManyToOne
     @JoinColumn(name = "plan_id", nullable = false)
+    @JsonIgnore
     private MembershipPlan membershipPlan;
 
     @OneToMany(mappedBy = "userMembership")
