@@ -46,7 +46,11 @@ public class AppointmentAPI
         return ResponseEntity.ok(appointments);
     }
 
-
+    @PutMapping("/coach/complete/{appointmentId}")
+    public ResponseEntity<?> markAppointmentAsCompleted(@PathVariable Long appointmentId) {
+        appointmentService.markAsCompleted(appointmentId);
+        return ResponseEntity.ok("Appointment marked as COMPLETED");
+    }
 
 
 }

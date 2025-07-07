@@ -11,7 +11,8 @@ public interface AuthenticationRepository extends JpaRepository<Account, Long> {
     //find account by  Email
     Account findAccountByEmail(String email);
 
-    List<Account> findTop10ByOrderByTotalPointDesc();
+    List<Account> findTop10ByRoleOrderByTotalPointDesc(Role role);
+
 
     List<Account> findByRole(Role role);
 

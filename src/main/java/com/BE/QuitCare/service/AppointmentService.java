@@ -67,7 +67,7 @@ public class AppointmentService
 
         Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
-        appointment.setStatus(AppointmentEnum.COMPLETED);
+        appointment.setStatus(AppointmentEnum.PENDING);
         appointment.setAccount(currentAccount);
         appointment.setSessionUser(slot);
         appointment.setGoogleMeetLink(generateGoogleMeetLink());
@@ -131,8 +131,27 @@ public class AppointmentService
         }).toList();
     }
 
+    public void markAsCompleted(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Appointment not found"));
 
+        // Lấy tài khoản coach hiện tại từ context
+        Account currentCoach = authenticationService.getCurentAccount(); // sửa lại tên biến cho đúng nghĩa
 
+        // Kiểm tra coach có phải chủ của sessionUser không
+        if (!appointment.getSessionUser().getAccount().getId().equals(currentCoach.getId())) {
+            throw new BadRequestException("Bạn không có quyền hoàn tất cuộc hẹn này.");
+        }
+
+        // Kiểm tra trạng thái trước khi cập nhật
+        if (appointment.getStatus() != AppointmentEnum.PENDING) {
+            throw new BadRequestException("Chỉ có thể xác nhận các cuộc hẹn ở trạng thái PENDING.");
+        }
+
+        // Cập nhật trạng thái hoàn thành
+        appointment.setStatus(AppointmentEnum.COMPLETED);
+        appointmentRepository.save(appointment);
+    }
 
 
 }

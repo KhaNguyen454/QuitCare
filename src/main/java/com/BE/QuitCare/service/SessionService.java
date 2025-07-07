@@ -194,7 +194,7 @@ public class SessionService
         }
 
         List<SessionUser> sessions = sessionUserRepository
-                .findByAccountAndDateBetweenAndIsAvailableTrueOrderByDateAscStartAsc(coach, from, to);
+                .findByAccountAndDateBetweenOrderByDateAscStartAsc(coach, from, to);
 
         return sessions.stream().map(session -> {
             SessionUserDTO dto = new SessionUserDTO();

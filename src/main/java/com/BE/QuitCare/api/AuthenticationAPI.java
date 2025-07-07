@@ -5,6 +5,7 @@ import com.BE.QuitCare.dto.response.AccountResponse;
 import com.BE.QuitCare.dto.request.LoginRequest;
 import com.BE.QuitCare.dto.request.RegisterRequest;
 import com.BE.QuitCare.entity.Account;
+import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import com.BE.QuitCare.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +40,7 @@ public class AuthenticationAPI {
     }
     @GetMapping("/ranking")
     public ResponseEntity<List<UserRankingDTO>> getRanking() {
-        List<Account> topUsers = authenticationRepository.findTop10ByOrderByTotalPointDesc();
+        List<Account> topUsers = authenticationRepository.findTop10ByRoleOrderByTotalPointDesc(Role.CUSTOMER);
         List<UserRankingDTO> result = topUsers.stream()
                 .map(a -> new UserRankingDTO(
                         a.getId(),
@@ -51,6 +52,7 @@ public class AuthenticationAPI {
 
         return ResponseEntity.ok(result);
     }
+
 
 
 

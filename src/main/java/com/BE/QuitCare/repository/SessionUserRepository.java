@@ -19,8 +19,6 @@ public interface SessionUserRepository extends JpaRepository<SessionUser,Long>
 
     List<SessionUser> findByAccountAndDateBetweenOrderByDateAscStartAsc(Account account, LocalDate from, LocalDate to);
 
-    List<SessionUser> findByAccountAndDateBetweenAndIsAvailableTrueOrderByDateAscStartAsc(Account account, LocalDate from, LocalDate to);
-
     @Query("SELECT s FROM SessionUser s WHERE s.account.id = :accountId AND FUNCTION('DATE', s.date) = :date")
     List<SessionUser> findByAccountIdAndDate(@Param("accountId") Long accountId, @Param("date") LocalDate date);
 

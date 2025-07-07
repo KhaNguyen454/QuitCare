@@ -40,7 +40,7 @@ public class QuitPlan {
     // mappedBy chỉ ra trường "quitPlan" trong QuitPlanStage là chủ sở hữu mối quan hệ
     // cascade = CascadeType.ALL để các thao tác trên QuitPlan ảnh hưởng đến các Stage liên quan
     // orphanRemoval = true để xóa các Stage khi chúng bị gỡ bỏ khỏi danh sách của QuitPlan
-    @OneToMany(mappedBy = "quitPlan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "quitPlan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("stageNumber ASC") // Sắp xếp các giai đoạn theo số thứ tự
     private List<QuitPlanStage> stages = new ArrayList<>();
 }
