@@ -126,6 +126,7 @@ public class VNPAYService {
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy Payment!"));
         paymentHistory.setStatus(request.getPaymentStatus());
         Account currentAccount = accountUtils.getCurrentAccount();
+        currentAccount.setRole(Role.CUSTOMER);
         UserMembership userMembership = new UserMembership();
         userMembership.setAccount(currentAccount);
 
