@@ -143,13 +143,10 @@ public class AuthenticationService implements UserDetailsService {
             throw new BadRequestException("Người dùng chưa xác thực.");
         }
 
-        Object principal = authentication.getPrincipal();
+        String username = authentication.getName(); // lấy username từ principal
 
-        if (!(principal instanceof Account)) {
-            throw new BadRequestException("Principal không hợp lệ.");
-        }
-
-        return (Account) principal;
+        return authenticationRepository.findByUsername(username)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy tài khoản với username: " + username));
     }
 
     public List<CoachInfoDTO> getAllCoaches() {

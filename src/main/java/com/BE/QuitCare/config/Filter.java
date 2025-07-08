@@ -98,7 +98,7 @@ public class Filter extends OncePerRequestFilter {
             }
             // => token dung
             UsernamePasswordAuthenticationToken authenToken =
-                    new UsernamePasswordAuthenticationToken(account, token, account.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(account.getUsername(), token, account.getAuthorities());
             authenToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenToken);
             // token ok, cho vao`

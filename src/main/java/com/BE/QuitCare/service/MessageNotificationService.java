@@ -1,6 +1,7 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.MessageNotificationDTO;
+import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.MessageNotification;
 import com.BE.QuitCare.entity.Quitprogress;
 import com.BE.QuitCare.enums.MessageStatus;
@@ -20,8 +21,16 @@ public class MessageNotificationService
     @Autowired
     private QuitProgressRepository quitprogressRepository;
 
-    public List<MessageNotificationDTO> getAll() {
-        return repository.findAll().stream().map(this::convertToDTO).toList();
+    @Autowired
+    AuthenticationService authenticationService;
+
+
+    public List<MessageNotificationDTO> getAllByCurrentAccount() {
+        Account user = authenticationService.getCurentAccount();
+        Long accountId = user.getId();
+
+        List<MessageNotification> list = repository.findAllByAccountId(accountId);
+        return list.stream().map(this::convertToDTO).toList();
     }
 
     public List<MessageNotificationDTO> getByProgressId(Long progressId) {

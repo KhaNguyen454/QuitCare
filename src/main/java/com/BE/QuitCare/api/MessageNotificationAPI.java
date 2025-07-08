@@ -23,9 +23,10 @@ public class MessageNotificationAPI
     private MessageNotificationService service;
 
     @GetMapping
-    public ResponseEntity<List<MessageNotificationDTO>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<List<MessageNotificationDTO>> getAllForCurrentUser() {
+        return ResponseEntity.ok(service.getAllByCurrentAccount());
     }
+
 
     @GetMapping("/by-progress/{progressId}")
     public ResponseEntity<List<MessageNotificationDTO>> getByProgressId(@PathVariable Long progressId) {
