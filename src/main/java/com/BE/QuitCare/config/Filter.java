@@ -40,7 +40,9 @@ public class Filter extends OncePerRequestFilter {
             "GET:/oauth2/**",
             "GET:/swagger-ui/**",       //  thêm dòng này
             "GET:/v3/api-docs/**",      //  thêm nếu dùng OpenAPI 3
-            "GET:/swagger-resources/**" //  thêm nếu Swagger yêu cầu
+            "GET:/swagger-resources/**",
+            "GET:/google/calendar/auth",
+            "GET:/google/calendar/callback"
     );
 
 

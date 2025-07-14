@@ -33,6 +33,8 @@ public class AppointmentService
     AuthenticationRepository authenticationRepository;
     @Autowired
     SessionService sessionService;
+    @Autowired
+    GoogleMeetService  googleMeetService;
 
     @Transactional
     public Appointment create(AppointmentRequest appointmentRequest) {
@@ -41,17 +43,18 @@ public class AppointmentService
         if (customer.getRole() != Role.CUSTOMER) {
             throw new BadRequestException("Chỉ CUSTOMER mới có thể đặt lịch hẹn.");
         }
-        Account doctor = authenticationRepository.findById(appointmentRequest.getCoachId())
+
+        Account coach = authenticationRepository.findById(appointmentRequest.getCoachId())
                 .orElseThrow(() -> new BadRequestException("Coach not found"));
 
-        if (doctor.getRole() != Role.COACH) {
+        if (coach.getRole() != Role.COACH) {
             throw new BadRequestException("Account is not a Coach");
         }
-        sessionService.ensureSessionForCoachOnDate(doctor, appointmentRequest.getAppointmentDate());
 
+        sessionService.ensureSessionForCoachOnDate(coach, appointmentRequest.getAppointmentDate());
 
         SessionUser slot = sessionUserRepository.findByAccountAndDateAndStart(
-                doctor,
+                coach,
                 appointmentRequest.getAppointmentDate(),
                 appointmentRequest.getStart()
         ).orElseThrow(() -> new BadRequestException("Không tìm thấy slot phù hợp"));
@@ -60,28 +63,32 @@ public class AppointmentService
             throw new BadRequestException("Slot is not available");
         }
 
-        Account currentAccount = authenticationService.getCurentAccount();
-        if (currentAccount.getRole() != Role.CUSTOMER) {
-            throw new BadRequestException("Only customers are allowed to create appointments");
-        }
-
         Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
         appointment.setStatus(AppointmentEnum.PENDING);
-        appointment.setAccount(currentAccount);
+        appointment.setAccount(customer);
         appointment.setSessionUser(slot);
-        appointment.setGoogleMeetLink(generateGoogleMeetLink());
-        appointmentRepository.save(appointment);
 
+        //  Gọi GoogleMeetService để tạo link Meet
+        try {
+            String meetLink = googleMeetService.createGoogleMeetLinkFromSlot(slot, coach);
+            appointment.setGoogleMeetLink(meetLink);
+        } catch (Exception e) {
+            throw new BadRequestException("Không thể tạo link Google Meet: " + e.getMessage());
+        }
+
+        appointmentRepository.save(appointment);
         slot.setAvailable(false);
+
         return appointment;
     }
 
-    private String generateGoogleMeetLink() {
-        // Cách đơn giản: tạo chuỗi giả lập như Meet
-        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 8);
-        return "https://meet.google.com/" + uniqueId;
-    }
+
+//    private String generateGoogleMeetLink() {
+//        // Cách đơn giản: tạo chuỗi giả lập như Meet
+//        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 8);
+//        return "https://meet.google.com/" + uniqueId;
+//    }
 
 
 
