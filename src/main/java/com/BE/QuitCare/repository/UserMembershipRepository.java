@@ -4,6 +4,7 @@ import com.BE.QuitCare.entity.UserMembership;
 import com.BE.QuitCare.enums.MembershipStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,5 +12,7 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
     List<UserMembership> findAllByDeletedFalse();
     Optional<UserMembership> findByIdAndDeletedFalse(Long id);
 
-    Optional<UserMembership> findByAccountIdAndStatus(Long accountId, MembershipStatus membershipStatus);
+    Optional<UserMembership> findFirstByAccount_IdAndStartDateBeforeAndEndDateAfterOrderByStartDateDesc(
+            Long accountId, LocalDateTime now1, LocalDateTime now2);
+
 }

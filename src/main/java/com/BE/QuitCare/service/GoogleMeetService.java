@@ -122,12 +122,16 @@ public class GoogleMeetService {
                 clientId,
                 clientSecret,
                 Collections.singleton(scope))
-                .setAccessType(accessType)
+                .setAccessType("offline") // bắt buộc để lấy refresh_token
                 .build();
+
         return flow.newAuthorizationUrl()
                 .setRedirectUri(redirectUri)
+                .set("prompt", "consent") //  chỉ dùng prompt
                 .build();
     }
+
+
 
     public void exchangeCodeForToken(String code) {
         try {

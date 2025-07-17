@@ -52,5 +52,11 @@ public class AppointmentAPI
         return ResponseEntity.ok("Appointment marked as COMPLETED");
     }
 
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<String> cancelAppointment(@PathVariable("id") Long id) {
+        appointmentService.markAsCancel(id);
+        return ResponseEntity.ok("Cuộc hẹn đã được hủy thành công.");
+    }
+
 
 }

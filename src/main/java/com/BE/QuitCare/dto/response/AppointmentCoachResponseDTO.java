@@ -8,6 +8,7 @@ import java.time.LocalTime;
 @Data
 public class AppointmentCoachResponseDTO
 {
+    private Long id;
     private String customerName;
     private LocalDate appointmentDate;
     private LocalTime startTime;

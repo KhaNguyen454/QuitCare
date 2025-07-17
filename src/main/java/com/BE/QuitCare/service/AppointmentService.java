@@ -6,18 +6,20 @@ import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.entity.SessionUser;
+import com.BE.QuitCare.entity.UserMembership;
 import com.BE.QuitCare.enums.AppointmentEnum;
 import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.exception.BadRequestException;
 import com.BE.QuitCare.repository.AppointmentRepository;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import com.BE.QuitCare.repository.SessionUserRepository;
+import com.BE.QuitCare.repository.UserMembershipRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.List;
 
 @Service
@@ -35,6 +37,8 @@ public class AppointmentService
     SessionService sessionService;
     @Autowired
     GoogleMeetService  googleMeetService;
+    @Autowired
+    UserMembershipRepository userMembershipRepository;
 
     @Transactional
     public Appointment create(AppointmentRequest appointmentRequest) {
@@ -63,13 +67,37 @@ public class AppointmentService
             throw new BadRequestException("Slot is not available");
         }
 
+        // Kiểm tra không được đặt slot ở quá khứ
+        LocalDateTime slotDateTime = LocalDateTime.of(slot.getDate(), slot.getStart());
+        if (slotDateTime.isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Không thể đặt lịch trong quá khứ.");
+        }
+
+        //  Lấy gói UserMembership hiện tại (ví dụ gói còn hiệu lực tại ngày đặt)
+        UserMembership membership = userMembershipRepository
+                .findFirstByAccount_IdAndStartDateBeforeAndEndDateAfterOrderByStartDateDesc(
+                        customer.getId(), slotDateTime, slotDateTime)
+                .orElseThrow(() -> new BadRequestException("Bạn chưa có gói thành viên hợp lệ."));
+
+        LocalDateTime startDate = membership.getStartDate();
+        LocalDateTime endDate = membership.getEndDate();
+
+        //  Kiểm tra số lượng cuộc hẹn đã đặt trong thời gian của gói
+        int appointmentCount = appointmentRepository
+                .countByAccount_IdAndSessionUser_StartBetween(
+                        customer.getId(), startDate, endDate);
+
+        if (appointmentCount >= 4) {
+            throw new BadRequestException("Bạn chỉ được đặt tối đa 4 cuộc hẹn trong thời gian gói.");
+        }
+
+        //  Tạo cuộc hẹn mới
         Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
         appointment.setStatus(AppointmentEnum.PENDING);
         appointment.setAccount(customer);
         appointment.setSessionUser(slot);
 
-        //  Gọi GoogleMeetService để tạo link Meet
         try {
             String meetLink = googleMeetService.createGoogleMeetLinkFromSlot(slot, coach);
             appointment.setGoogleMeetLink(meetLink);
@@ -79,9 +107,11 @@ public class AppointmentService
 
         appointmentRepository.save(appointment);
         slot.setAvailable(false);
+        sessionUserRepository.save(slot);
 
         return appointment;
     }
+
 
 
 //    private String generateGoogleMeetLink() {
@@ -89,7 +119,25 @@ public class AppointmentService
 //        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 8);
 //        return "https://meet.google.com/" + uniqueId;
 //    }
-
+//     @Scheduled(fixedRate = 60000) // chạy mỗi 60 giây
+//     @Transactional
+//     public void autoUpdatePendingAppointmentsToApproved() {
+//          LocalDateTime now = LocalDateTime.now();
+//
+//          List<Appointment> pendingAppointments = appointmentRepository.findByStatus(AppointmentEnum.PENDING);
+//
+//          for (Appointment appt : pendingAppointments) {
+//          LocalDate appointmentDate = appt.getSessionUser().getDate();
+//          LocalTime startTime = appt.getSessionUser().getStart();
+//          LocalDateTime scheduledDateTime = LocalDateTime.of(appointmentDate, startTime);
+//
+//        if (!appt.getStatus().equals(AppointmentEnum.APPROVED)
+//                && (now.isAfter(scheduledDateTime) || now.isEqual(scheduledDateTime))) {
+//            appt.setStatus(AppointmentEnum.APPROVED);
+//            appointmentRepository.save(appt);
+//        }
+//    }
+//}
 
 
     public List<AppointmentCoachResponseDTO> getAppointmentsForCurrentCoach() {
@@ -108,6 +156,7 @@ public class AppointmentService
 
         return appointments.stream().map(appointment -> {
             AppointmentCoachResponseDTO dto = new AppointmentCoachResponseDTO();
+            dto.setId(appointment.getId());
             dto.setCustomerName(appointment.getAccount().getFullName());
             dto.setAppointmentDate(appointment.getSessionUser().getDate());
             dto.setStartTime(appointment.getSessionUser().getStart());
@@ -160,5 +209,34 @@ public class AppointmentService
         appointmentRepository.save(appointment);
     }
 
+    @Transactional
+    public void markAsCancel(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy cuộc hẹn."));
+
+        Account currentUser = authenticationService.getCurentAccount();
+        Role role = currentUser.getRole();
+
+        boolean isCoach = role == Role.COACH &&
+                appointment.getSessionUser().getAccount().getId().equals(currentUser.getId());
+
+        boolean isCustomer = role == Role.CUSTOMER &&
+                appointment.getAccount().getId().equals(currentUser.getId());
+
+        if (!isCoach && !isCustomer) {
+            throw new BadRequestException("Bạn không có quyền hủy cuộc hẹn này.");
+        }
+
+        if (appointment.getStatus() != AppointmentEnum.PENDING) {
+            throw new BadRequestException("Chỉ có thể hủy cuộc hẹn đang chờ xác nhận.");
+        }
+
+        // Cập nhật trạng thái và giải phóng slot
+        appointment.setStatus(AppointmentEnum.CANCELLED);
+        appointment.getSessionUser().setAvailable(true);
+
+        appointmentRepository.save(appointment);
+        sessionUserRepository.save(appointment.getSessionUser());
+    }
 
 }

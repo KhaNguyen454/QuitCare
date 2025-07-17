@@ -211,10 +211,10 @@ public class VNPAYService {
         Account currentAccount = accountUtils.getCurrentAccount(); // Sử dụng AccountUtils
 
         // 2. Kiểm tra xem người dùng đã có gói thành viên đang hoạt động chưa
-        Optional<UserMembership> existingActiveMembership = userMembershipRepository.findByAccountIdAndStatus(currentAccount.getId(), MembershipStatus.ACTIVE);
-        if (existingActiveMembership.isPresent()) {
-            throw new IllegalArgumentException("Tài khoản đã có một gói thành viên đang hoạt động.");
-        }
+    //        Optional<UserMembership> existingActiveMembership = userMembershipRepository.findByAccountIdAndStatus(currentAccount.getId(), MembershipStatus.ACTIVE);
+    //        if (existingActiveMembership.isPresent()) {
+    //            throw new IllegalArgumentException("Tài khoản đã có một gói thành viên đang hoạt động.");
+    //        }
 
         // 3. Tạo UserMembership ban đầu với trạng thái PENDING
         UserMembership userMembership = new UserMembership();

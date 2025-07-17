@@ -42,4 +42,6 @@ public class UserMembership {
     @JsonIgnore
     private List<PaymentHistory> paymentHistories;
 
+
+
 }
