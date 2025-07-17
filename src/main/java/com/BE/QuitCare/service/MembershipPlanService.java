@@ -3,9 +3,12 @@ package com.BE.QuitCare.service;
 import com.BE.QuitCare.dto.MembershipPlanDTO;
 import com.BE.QuitCare.entity.MembershipPlan;
 import com.BE.QuitCare.repository.MembershipPlanRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,7 +26,10 @@ public class MembershipPlanService {
         dto.setName(entity.getName());
         dto.setPrice(entity.getPrice());
         dto.setDescription(entity.getDescription());
-        dto.setDuration(entity.getDuration());
+        // Chuyển đổi Duration sang Long (số ngày) khi gửi ra frontend
+        if (entity.getDuration() != null) {
+            dto.setDurationInDays(entity.getDuration().toDays());
+        }
         return dto;
     }
 
@@ -34,7 +40,12 @@ public class MembershipPlanService {
         entity.setName(dto.getName());
         entity.setPrice(dto.getPrice());
         entity.setDescription(dto.getDescription());
-        entity.setDuration(dto.getDuration()); // <-- THÊM DÒNG NÀY
+        // Chuyển đổi Long (số ngày) từ frontend sang Duration khi lưu vào DB
+        if (dto.getDurationInDays() != null) {
+            entity.setDuration(Duration.ofDays(dto.getDurationInDays()));
+        } else {
+            entity.setDuration(Duration.ZERO); // Mặc định là 0 nếu không có duration
+        }
         return entity;
     }
 
@@ -50,25 +61,30 @@ public class MembershipPlanService {
                 .map(this::toDTO);
     }
 
+    @Transactional
     public MembershipPlanDTO create(MembershipPlanDTO dto) {
         MembershipPlan plan = toEntity(dto);
         plan.setDeleted(false);
         return toDTO(repository.save(plan));
     }
-
+    @Transactional // Thêm @Transactional
     public MembershipPlanDTO update(Long id, MembershipPlanDTO dto) {
-        Optional<MembershipPlan> optionalPlan = repository.findByIdAndDeletedFalse(id);
-        if (optionalPlan.isPresent()) {
-            MembershipPlan plan = optionalPlan.get();
-            plan.setName(dto.getName());
-            plan.setPrice(dto.getPrice());
-            plan.setDescription(dto.getDescription());
-            plan.setDuration(dto.getDuration()); // <-- THÊM DÒNG NÀY
-            return toDTO(repository.save(plan));
-        }
-        return null; // Có thể ném EntityNotFoundException thay vì trả về null
-    }
+        MembershipPlan plan = repository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gói thành viên với ID: " + id)); // Ném exception rõ ràng
 
+        plan.setName(dto.getName());
+        plan.setPrice(dto.getPrice());
+        plan.setDescription(dto.getDescription());
+        // Chuyển đổi Long (số ngày) từ frontend sang Duration khi cập nhật
+        if (dto.getDurationInDays() != null) {
+            plan.setDuration(Duration.ofDays(dto.getDurationInDays()));
+        } else {
+            plan.setDuration(Duration.ZERO); // Mặc định là 0 nếu không có duration
+        }
+        // plan.setCreatedAt(LocalDateTime.now()); // createdAt chỉ nên set khi tạo
+        return toDTO(repository.save(plan));
+    }
+    @Transactional
     public boolean softDelete(Long id) {
         Optional<MembershipPlan> optionalPlan = repository.findByIdAndDeletedFalse(id);
         if (optionalPlan.isPresent()) {
