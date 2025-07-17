@@ -13,5 +13,5 @@ MembershipPlanDTO {
     private String name;
     private Long price;
     private String description;
-    private Duration duration;
+    private Long durationInDays;
 }
