@@ -15,7 +15,7 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
     Optional<UserMembership> findFirstByAccount_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(
             Long accountId, LocalDateTime start, LocalDateTime end);
 
-
+    List<UserMembership> findByStatusAndEndDateBefore(MembershipStatus status, java.time.LocalDateTime endDate);
 
 
 }
