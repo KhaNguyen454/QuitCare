@@ -14,7 +14,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long>
 
     List<Appointment> findByAccount_IdOrderByCreateAtDesc(Long customerId);
 
-    int countByAccount_IdAndSessionUser_StartBetween(Long accountId, LocalDateTime start, LocalDateTime end);
+    int countByAccount_IdAndSessionUser_DateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
 
 
 }

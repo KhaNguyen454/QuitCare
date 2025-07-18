@@ -12,7 +12,10 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
     List<UserMembership> findAllByDeletedFalse();
     Optional<UserMembership> findByIdAndDeletedFalse(Long id);
 
-    Optional<UserMembership> findFirstByAccount_IdAndStartDateBeforeAndEndDateAfterOrderByStartDateDesc(
-            Long accountId, LocalDateTime now1, LocalDateTime now2);
+    Optional<UserMembership> findFirstByAccount_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(
+            Long accountId, LocalDateTime start, LocalDateTime end);
+
+
+
 
 }

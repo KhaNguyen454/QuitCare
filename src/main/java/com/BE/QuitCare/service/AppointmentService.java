@@ -73,25 +73,37 @@ public class AppointmentService
             throw new BadRequestException("Không thể đặt lịch trong quá khứ.");
         }
 
-        //  Lấy gói UserMembership hiện tại (ví dụ gói còn hiệu lực tại ngày đặt)
+        // Lấy ngày đặt để so sánh với membership
+        LocalDateTime appointmentDateTime = LocalDateTime.of(slot.getDate(), slot.getStart());
+
+
+        // Truy vấn gói membership hợp lệ theo ngày
         UserMembership membership = userMembershipRepository
-                .findFirstByAccount_IdAndStartDateBeforeAndEndDateAfterOrderByStartDateDesc(
-                        customer.getId(), slotDateTime, slotDateTime)
+                .findFirstByAccount_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(
+                        customer.getId(),
+                        appointmentDateTime,
+                        appointmentDateTime
+                )
                 .orElseThrow(() -> new BadRequestException("Bạn chưa có gói thành viên hợp lệ."));
+
 
         LocalDateTime startDate = membership.getStartDate();
         LocalDateTime endDate = membership.getEndDate();
 
-        //  Kiểm tra số lượng cuộc hẹn đã đặt trong thời gian của gói
+        // Kiểm tra số lượng cuộc hẹn đã đặt trong thời gian của gói
         int appointmentCount = appointmentRepository
-                .countByAccount_IdAndSessionUser_StartBetween(
-                        customer.getId(), startDate, endDate);
+                .countByAccount_IdAndSessionUser_DateBetween(
+                        customer.getId(),
+                        startDate.toLocalDate(),
+                        endDate.toLocalDate()
+                );
+
 
         if (appointmentCount >= 4) {
             throw new BadRequestException("Bạn chỉ được đặt tối đa 4 cuộc hẹn trong thời gian gói.");
         }
 
-        //  Tạo cuộc hẹn mới
+        // Tạo cuộc hẹn mới
         Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
         appointment.setStatus(AppointmentEnum.PENDING);
@@ -111,6 +123,7 @@ public class AppointmentService
 
         return appointment;
     }
+
 
 
 

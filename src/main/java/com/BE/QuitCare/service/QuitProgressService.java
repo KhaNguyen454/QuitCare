@@ -1,6 +1,7 @@
 package com.BE.QuitCare.service;
 
 import com.BE.QuitCare.dto.QuitProgressDTO;
+import com.BE.QuitCare.dto.QuitProgressDTO2;
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.MessageNotification;
 import com.BE.QuitCare.entity.QuitPlanStage;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -281,6 +283,49 @@ public class QuitProgressService
         return notifications;
     }
 
+
+    public QuitProgressDTO2 getProgressByStage(Long userId, Long stageId) {
+        List<Quitprogress> progresses = quitProgressRepository.findByStageAndUser(stageId, userId);
+
+        if (progresses.isEmpty()) {
+            throw new BadRequestException("Không có dữ liệu tiến trình cho giai đoạn này");
+        }
+
+        LocalDate startDate = progresses.stream()
+                .map(Quitprogress::getDate)
+                .min(LocalDate::compareTo)
+                .orElse(null);
+
+        LocalDate endDate = progresses.stream()
+                .map(Quitprogress::getDate)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+
+        // Ngày không hút = ngày mà (mục tiêu - hút thực tế) >= 0
+        long daysWithoutSmoking = progresses.stream()
+                .filter(p -> {
+                    QuitPlanStage stage = p.getQuitPlanStage();
+                    return stage != null && (stage.getTargetCigarettes() - p.getCigarettes_smoked() >= 0);
+                })
+                .count();
+
+        int cigarettesAvoided = progresses.stream()
+                .mapToInt(p -> {
+                    if (p.getSmokingStatus() != null)
+                        return p.getSmokingStatus().getCigarettes_per_day() - p.getCigarettes_smoked();
+                    else return 0;
+                })
+                .sum();
+
+        int moneySaved = progresses.stream()
+                .mapToInt(Quitprogress::getMoney_saved)
+                .sum();
+
+        double completionRate = (double) daysWithoutSmoking / progresses.size() * 100;
+        completionRate = Math.round(completionRate * 10.0) / 10.0;
+
+        return new QuitProgressDTO2(startDate, endDate, daysWithoutSmoking, cigarettesAvoided, moneySaved, completionRate);
+    }
 
 
 

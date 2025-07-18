@@ -1,6 +1,7 @@
 package com.BE.QuitCare.api;
 
 import com.BE.QuitCare.dto.QuitProgressDTO;
+import com.BE.QuitCare.dto.QuitProgressDTO2;
 import com.BE.QuitCare.entity.MessageNotification;
 import com.BE.QuitCare.entity.Quitprogress;
 import com.BE.QuitCare.repository.MessageNotificationRepository;
@@ -75,5 +76,12 @@ public class  QuitProgressAPI
         return ResponseEntity.ok(saved);
     }
 
+    @GetMapping("/stage/{stageId}/user/{userId}")
+    public ResponseEntity<QuitProgressDTO2> getProgressByStage(
+            @PathVariable Long stageId,
+            @PathVariable Long userId
+    ) {
+        return ResponseEntity.ok(service.getProgressByStage(userId, stageId));
+    }
 
 }
