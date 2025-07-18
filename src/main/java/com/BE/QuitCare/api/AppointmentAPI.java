@@ -1,6 +1,7 @@
 package com.BE.QuitCare.api;
 
 
+import com.BE.QuitCare.dto.AppointmentResponseDTO2;
 import com.BE.QuitCare.dto.request.AppointmentRequest;
 import com.BE.QuitCare.dto.response.AppointmentCoachResponseDTO;
 import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
@@ -27,11 +28,11 @@ public class AppointmentAPI
 
 
     @PostMapping
-    public ResponseEntity<Appointment> create(@RequestBody AppointmentRequest appointmentRequest)
-    {
-        Appointment appointment = appointmentService.create(appointmentRequest);
-        return ResponseEntity.ok().body(appointment);
+    public ResponseEntity<AppointmentResponseDTO2> create(@RequestBody AppointmentRequest appointmentRequest) {
+        AppointmentResponseDTO2 responseDTO = appointmentService.create(appointmentRequest);
+        return ResponseEntity.ok().body(responseDTO);
     }
+
 
     @GetMapping("/coach")
     public ResponseEntity<List<AppointmentCoachResponseDTO>> getAppointmentsForCoach() {

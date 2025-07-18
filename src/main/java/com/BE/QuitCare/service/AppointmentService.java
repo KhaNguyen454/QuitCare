@@ -1,5 +1,6 @@
 package com.BE.QuitCare.service;
 
+import com.BE.QuitCare.dto.AppointmentResponseDTO2;
 import com.BE.QuitCare.dto.request.AppointmentRequest;
 import com.BE.QuitCare.dto.response.AppointmentCoachResponseDTO;
 import com.BE.QuitCare.dto.response.AppointmentResponseDTO;
@@ -41,7 +42,7 @@ public class AppointmentService
     UserMembershipRepository userMembershipRepository;
 
     @Transactional
-    public Appointment create(AppointmentRequest appointmentRequest) {
+    public AppointmentResponseDTO2 create(AppointmentRequest appointmentRequest) {
         Account customer = authenticationService.getCurentAccount();
 
         if (customer.getRole() != Role.CUSTOMER) {
@@ -55,6 +56,7 @@ public class AppointmentService
             throw new BadRequestException("Account is not a Coach");
         }
 
+        // Đảm bảo Coach có slot vào ngày chỉ định
         sessionService.ensureSessionForCoachOnDate(coach, appointmentRequest.getAppointmentDate());
 
         SessionUser slot = sessionUserRepository.findByAccountAndDateAndStart(
@@ -73,11 +75,10 @@ public class AppointmentService
             throw new BadRequestException("Không thể đặt lịch trong quá khứ.");
         }
 
-        // Lấy ngày đặt để so sánh với membership
+        // Lấy ngày đặt để kiểm tra gói còn hiệu lực
         LocalDateTime appointmentDateTime = LocalDateTime.of(slot.getDate(), slot.getStart());
 
-
-        // Truy vấn gói membership hợp lệ theo ngày
+        // Tìm gói membership đang hoạt động tại thời điểm này
         UserMembership membership = userMembershipRepository
                 .findFirstByAccount_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(
                         customer.getId(),
@@ -86,29 +87,20 @@ public class AppointmentService
                 )
                 .orElseThrow(() -> new BadRequestException("Bạn chưa có gói thành viên hợp lệ."));
 
-
-        LocalDateTime startDate = membership.getStartDate();
-        LocalDateTime endDate = membership.getEndDate();
-
-        // Kiểm tra số lượng cuộc hẹn đã đặt trong thời gian của gói
-        int appointmentCount = appointmentRepository
-                .countByAccount_IdAndSessionUser_DateBetween(
-                        customer.getId(),
-                        startDate.toLocalDate(),
-                        endDate.toLocalDate()
-                );
-
+        // Đếm số lần đặt lịch đã dùng của gói này
+        int appointmentCount = appointmentRepository.countByUserMembership_Id(membership.getId());
 
         if (appointmentCount >= 4) {
             throw new BadRequestException("Bạn chỉ được đặt tối đa 4 cuộc hẹn trong thời gian gói.");
         }
 
-        // Tạo cuộc hẹn mới
+        // Tạo cuộc hẹn
         Appointment appointment = new Appointment();
         appointment.setCreateAt(LocalDate.now());
         appointment.setStatus(AppointmentEnum.PENDING);
         appointment.setAccount(customer);
         appointment.setSessionUser(slot);
+        appointment.setUserMembership(membership); // GẮN GÓI vào cuộc hẹn
 
         try {
             String meetLink = googleMeetService.createGoogleMeetLinkFromSlot(slot, coach);
@@ -118,12 +110,49 @@ public class AppointmentService
         }
 
         appointmentRepository.save(appointment);
+
+        // Cập nhật slot đã được đặt
         slot.setAvailable(false);
         sessionUserRepository.save(slot);
 
-        return appointment;
+        return mapToDto(appointment);
     }
 
+
+    public AppointmentResponseDTO2 mapToDto(Appointment appointment) {
+        AppointmentResponseDTO2 dto = new AppointmentResponseDTO2();
+        dto.setId(appointment.getId());
+        dto.setStatus(appointment.getStatus().name());
+        dto.setGoogleMeetLink(appointment.getGoogleMeetLink());
+        dto.setCreateAt(appointment.getCreateAt().toString());
+
+        // Customer
+        Account customer = appointment.getAccount();
+        dto.setCustomerId(customer.getId());
+        dto.setCustomerName(customer.getFullName());
+        dto.setCustomerEmail(customer.getEmail());
+
+        // Coach (from sessionUser)
+        Account coach = appointment.getSessionUser().getAccount();
+        dto.setCoachId(coach.getId());
+        dto.setCoachName(coach.getFullName());
+        dto.setCoachEmail(coach.getEmail());
+
+        // Session
+        dto.setSessionDate(appointment.getSessionUser().getDate().toString());
+        dto.setSessionStart(appointment.getSessionUser().getStart().toString());
+        dto.setSessionEnd(appointment.getSessionUser().getEnd().toString());
+
+        // Membership
+        if (appointment.getUserMembership() != null) {
+            dto.setMembershipId(appointment.getUserMembership().getId());
+            dto.setMembershipPlanName(appointment.getUserMembership().getMembershipPlan().getName());
+            dto.setMembershipStart(appointment.getUserMembership().getStartDate().toString());
+            dto.setMembershipEnd(appointment.getUserMembership().getEndDate().toString());
+        }
+
+        return dto;
+    }
 
 
 

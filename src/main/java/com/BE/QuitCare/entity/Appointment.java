@@ -1,6 +1,7 @@
 package com.BE.QuitCare.entity;
 
 import com.BE.QuitCare.enums.AppointmentEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,9 +28,16 @@ public class Appointment
 
     @ManyToOne
     @JoinColumn(name = "account_id")
+    @JsonIgnore
     Account account;
 
     @ManyToOne
     @JoinColumn(name = "session_user_id")
+    @JsonIgnore
     private SessionUser sessionUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_membership_id", nullable = false)
+    private UserMembership userMembership;
+
 }
