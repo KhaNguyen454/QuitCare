@@ -324,7 +324,11 @@ public class QuitProgressService
         double completionRate = (double) daysWithoutSmoking / progresses.size() * 100;
         completionRate = Math.round(completionRate * 10.0) / 10.0;
 
-        return new QuitProgressDTO2(startDate, endDate, daysWithoutSmoking, cigarettesAvoided, moneySaved, completionRate);
+        // Tính số ngày không nhập tiến trình
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        long daysNotTracked = totalDays - progresses.size();
+
+        return new QuitProgressDTO2(startDate, endDate, daysWithoutSmoking, cigarettesAvoided, moneySaved, completionRate, daysNotTracked);
     }
 
 

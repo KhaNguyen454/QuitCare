@@ -1,5 +1,6 @@
 package com.BE.QuitCare.api;
 
+import com.BE.QuitCare.dto.MembershipPlanDTO;
 import com.BE.QuitCare.dto.UserRankingDTO;
 import com.BE.QuitCare.dto.response.AccountResponse;
 import com.BE.QuitCare.dto.request.LoginRequest;
@@ -8,6 +9,7 @@ import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.repository.AuthenticationRepository;
 import com.BE.QuitCare.service.AuthenticationService;
+import com.BE.QuitCare.service.MembershipPlanService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ public class AuthenticationAPI {
     AuthenticationService authenticationService;
     @Autowired
     AuthenticationRepository authenticationRepository;
+    @Autowired
+    MembershipPlanService service;
 
     @PostMapping("/register")
     public ResponseEntity register(@RequestBody RegisterRequest registerRequest){
@@ -53,7 +57,8 @@ public class AuthenticationAPI {
         return ResponseEntity.ok(result);
     }
 
-
-
-
+    @GetMapping("/api/membership-plans")
+    public ResponseEntity<List<MembershipPlanDTO>> getAllPlans() {
+        return ResponseEntity.ok(service.getAll());
+    }
 }

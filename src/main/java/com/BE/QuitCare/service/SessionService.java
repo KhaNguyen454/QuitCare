@@ -140,8 +140,8 @@ public class SessionService
 
 
     //// Chạy mỗi phút để test (không dùng trong production)
-    @Scheduled(cron = "0 * * * * *")
-   //@Scheduled(cron = "0 0 0 1 * *") // chạy 00:00 ngày đầu tiên mỗi tháng
+   // @Scheduled(cron = "0 * * * * *")
+   @Scheduled(cron = "0 0 0 1 * *") // chạy 00:00 ngày đầu tiên mỗi tháng
     public void autoGenerateCoachSessions() {
         LocalDate startDate = LocalDate.now().withDayOfMonth(1); // ngày đầu tháng
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth()); // ngày cuối tháng
