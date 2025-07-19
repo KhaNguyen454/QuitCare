@@ -42,7 +42,7 @@ public class MembershipExpiryService {
         System.out.println("Tìm thấy " + expiredMemberships.size() + " gói thành viên đã hết hạn. Đang cập nhật trạng thái...");
 
         for (UserMembership membership : expiredMemberships) {
-            membership.setStatus(MembershipStatus.INACTIVE); // Chuyển trạng thái sang INACTIVE
+            membership.setStatus(MembershipStatus.EXPIRED); // Chuyển trạng thái sang INACTIVE
             userMembershipRepository.save(membership); // Lưu thay đổi vào DB
             System.out.println("Đã cập nhật gói thành viên ID: " + membership.getId() + " sang trạng thái INACTIVE.");
         }

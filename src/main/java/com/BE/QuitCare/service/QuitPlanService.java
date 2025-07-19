@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 public class QuitPlanService {
 
+
     @Autowired
     private QuitPlanRepository quitPlanRepository;
 
@@ -121,7 +122,7 @@ public class QuitPlanService {
         // 6. Lưu cập nhật và trả về DTO
         return modelMapper.map(quitPlanRepository.save(quitPlan), QuitPlanDTO.class);
     }
-
+    @Transactional
     public void deleteQuitPlan(Long accountId, Long quitPlanId) {
         QuitPlan quitPlan = quitPlanRepository.findById(quitPlanId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy kế hoạch cai nghiện với ID: " + quitPlanId));
@@ -129,7 +130,11 @@ public class QuitPlanService {
         if (!quitPlan.getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền xóa kế hoạch cai nghiện này.");
         }
-        quitPlanRepository.delete(quitPlan);
+        try {
+            quitPlanRepository.delete(quitPlan);
+        } catch (Exception e) {
+            throw new RuntimeException("Không thể xóa kế hoạch cai nghiện do lỗi hệ thống hoặc ràng buộc dữ liệu.");
+        }
     }
 
     // --- Các thao tác với QuitPlanStage ---
@@ -225,6 +230,7 @@ public class QuitPlanService {
         return modelMapper.map(quitPlanStageRepository.save(stage), QuitPlanStageDTO.class);
     }
 
+    @Transactional
     public void deleteQuitPlanStage(Long accountId, Long stageId) {
         QuitPlanStage stage = quitPlanStageRepository.findById(stageId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giai đoạn kế hoạch cai nghiện với ID: " + stageId));
@@ -233,7 +239,6 @@ public class QuitPlanService {
             throw new SecurityException("Bạn không có quyền xóa giai đoạn kế hoạch cai nghiện này.");
         }
 
-        // Chỉ cho phép xóa các giai đoạn của kế hoạch do người dùng tự tạo (isSystemPlan = false)
         // và khi kế hoạch đang ở trạng thái NHÁP hoặc HOẠT ĐỘNG
         if (stage.getQuitPlan().isSystemPlan()) {
             throw new IllegalArgumentException("Không thể xóa trực tiếp các giai đoạn của kế hoạch cai nghiện do hệ thống tạo.");
@@ -242,7 +247,11 @@ public class QuitPlanService {
             throw new IllegalArgumentException("Không thể xóa các giai đoạn của kế hoạch cai nghiện đã hoàn thành hoặc đã hủy.");
         }
 
-        quitPlanStageRepository.delete(stage);
+        try {
+            quitPlanStageRepository.delete(stage);
+        } catch (Exception e) {
+            throw new RuntimeException("Không thể xóa giai đoạn kế hoạch cai nghiện do lỗi hệ thống hoặc ràng buộc dữ liệu.");
+        }
     }
 
     // --- Phương thức hỗ trợ ---

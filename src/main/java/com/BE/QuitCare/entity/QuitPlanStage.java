@@ -30,7 +30,7 @@ public class QuitPlanStage {
     @JsonIgnore
     private QuitPlan quitPlan;
 
-    @OneToMany(mappedBy = "quitPlanStage")
+    @OneToMany(mappedBy = "quitPlanStage",cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Quitprogress>  quitProgress;
 
