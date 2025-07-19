@@ -148,7 +148,7 @@ public class QuitPlanAPI {
             @PathVariable Long accountId,
             @PathVariable Long quitPlanId,
             @PathVariable Long stageId) {
-        quitPlanService.deleteQuitPlanStage(accountId, stageId);
+        quitPlanService.deleteQuitPlanStage(accountId,quitPlanId, stageId);
         return ResponseEntity.noContent().build();
     }
 }
