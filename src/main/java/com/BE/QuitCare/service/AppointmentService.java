@@ -9,6 +9,7 @@ import com.BE.QuitCare.entity.Appointment;
 import com.BE.QuitCare.entity.SessionUser;
 import com.BE.QuitCare.entity.UserMembership;
 import com.BE.QuitCare.enums.AppointmentEnum;
+import com.BE.QuitCare.enums.MembershipStatus;
 import com.BE.QuitCare.enums.Role;
 import com.BE.QuitCare.exception.BadRequestException;
 import com.BE.QuitCare.repository.AppointmentRepository;
@@ -90,7 +91,10 @@ public class AppointmentService
         // Đếm số lần đặt lịch đã dùng của gói này
         int appointmentCount = appointmentRepository.countByUserMembership_Id(membership.getId());
 
-        if (appointmentCount >= 4) {
+        if (appointmentCount + 1 >= 4) {
+
+            membership.setStatus(MembershipStatus.INACTIVE);
+            userMembershipRepository.save(membership);
             throw new BadRequestException("Bạn chỉ được đặt tối đa 4 cuộc hẹn trong thời gian gói.");
         }
 
