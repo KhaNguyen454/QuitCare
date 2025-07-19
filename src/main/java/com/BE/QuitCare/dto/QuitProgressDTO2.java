@@ -16,4 +16,6 @@ public class QuitProgressDTO2 {
     private int cigarettesAvoided;
     private int moneySaved;
     private double completionRate;
+    private long daysNotTracked;
+
 }

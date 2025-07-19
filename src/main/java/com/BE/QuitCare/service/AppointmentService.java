@@ -88,11 +88,11 @@ public class AppointmentService
                 )
                 .orElseThrow(() -> new BadRequestException("Bạn chưa có gói thành viên hợp lệ."));
 
-        // Đếm số lần đặt lịch đã dùng của gói này
+        // Đếm số cuộc hẹn hiện tại
         int appointmentCount = appointmentRepository.countByUserMembership_Id(membership.getId());
 
-        if (appointmentCount + 1 >= 4) {
-
+// Nếu đã đủ 4, chặn luôn
+        if (appointmentCount >= 4) {
             membership.setStatus(MembershipStatus.INACTIVE);
             userMembershipRepository.save(membership);
             throw new BadRequestException("Bạn chỉ được đặt tối đa 4 cuộc hẹn trong thời gian gói.");
@@ -113,11 +113,19 @@ public class AppointmentService
             throw new BadRequestException("Không thể tạo link Google Meet: " + e.getMessage());
         }
 
-        appointmentRepository.save(appointment);
+        appointmentRepository.saveAndFlush(appointment);
 
         // Cập nhật slot đã được đặt
         slot.setAvailable(false);
         sessionUserRepository.save(slot);
+
+        // Sau khi lưu cuộc hẹn thành công
+        int newCount = appointmentCount + 1;
+
+        if (newCount == 4) {
+            membership.setStatus(MembershipStatus.INACTIVE);
+            userMembershipRepository.save(membership);
+        }
 
         return mapToDto(appointment);
     }
