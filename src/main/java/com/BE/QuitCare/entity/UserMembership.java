@@ -38,7 +38,7 @@ public class UserMembership {
     @JsonIgnore
     private MembershipPlan membershipPlan;
 
-    @OneToMany(mappedBy = "userMembership")
+    @OneToMany(mappedBy = "userMembership",cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PaymentHistory> paymentHistories;
 

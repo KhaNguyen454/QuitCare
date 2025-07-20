@@ -31,7 +31,7 @@ public class MembershipPlan {
         this.createdAt = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "membershipPlan")
+    @OneToMany(mappedBy = "membershipPlan",cascade = CascadeType.ALL)
     @JsonIgnore
     private List<UserMembership> userMemberships;
 
