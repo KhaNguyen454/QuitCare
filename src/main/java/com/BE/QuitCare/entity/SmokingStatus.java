@@ -65,7 +65,7 @@ public class SmokingStatus
     @JsonIgnore
     private Account account;
 
-    @OneToMany(mappedBy = "smokingStatus")
+    @OneToMany(mappedBy = "smokingStatus",cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Quitprogress> quitprogressList;
 

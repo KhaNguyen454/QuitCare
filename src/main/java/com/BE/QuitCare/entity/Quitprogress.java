@@ -42,6 +42,7 @@ public class Quitprogress
     private List<MessageNotification>  messageNotifications;
 
     @ManyToOne
-    @JoinColumn(name = "smoking_status_id", nullable = false)
+    @JoinColumn(name = "smoking_status_id",nullable = false
+    )
     private SmokingStatus smokingStatus;
 }

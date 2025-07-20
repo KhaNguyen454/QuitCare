@@ -83,7 +83,6 @@ public class QuitPlanService {
         return modelMapper.map(quitPlan, QuitPlanDTO.class);
     }
 
-    @Transactional
     public QuitPlanDTO updateQuitPlan(Long accountId, Long quitPlanId, QuitPlanUpdateRequest request) {
         // 1. Tìm kế hoạch cai nghiện
         QuitPlan quitPlan = quitPlanRepository.findById(quitPlanId)
@@ -154,6 +153,7 @@ public class QuitPlanService {
         if (quitPlan.isSystemPlan()) {
             throw new IllegalArgumentException("Không thể thêm giai đoạn vào kế hoạch hệ thống.");
         }
+
         if (quitPlan.getQuitPlanStatus() == QuitPlanStatus.COMPLETED ||
                 quitPlan.getQuitPlanStatus() == QuitPlanStatus.CANCEL) {
             throw new IllegalArgumentException("Không thể thêm vào kế hoạch đã hoàn thành hoặc đã hủy.");
@@ -230,11 +230,13 @@ public class QuitPlanService {
         return modelMapper.map(quitPlanStageRepository.save(stage), QuitPlanStageDTO.class);
     }
 
-    @Transactional
-    public void deleteQuitPlanStage(Long accountId, Long stageId) {
+    public void deleteQuitPlanStage(Long accountId,Long quitPlanId, Long stageId) {
         QuitPlanStage stage = quitPlanStageRepository.findById(stageId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy giai đoạn kế hoạch cai nghiện với ID: " + stageId));
 
+        if (!stage.getQuitPlan().getId().equals(quitPlanId)) {
+            throw new IllegalArgumentException("Giai đoạn ID: " + stageId + " không thuộc về kế hoạch ID: " + quitPlanId);
+        }
         if (!stage.getQuitPlan().getAccount().getId().equals(accountId)) {
             throw new SecurityException("Bạn không có quyền xóa giai đoạn kế hoạch cai nghiện này.");
         }
@@ -248,8 +250,10 @@ public class QuitPlanService {
         }
 
         try {
-            quitPlanStageRepository.delete(stage);
+            quitPlanStageRepository.deleteByStageId(stageId);
+
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Không thể xóa giai đoạn kế hoạch cai nghiện do lỗi hệ thống hoặc ràng buộc dữ liệu.");
         }
     }

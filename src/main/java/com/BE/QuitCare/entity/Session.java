@@ -25,7 +25,7 @@ public class Session
     private LocalTime start;
     private LocalTime end;
 
-    @OneToMany(mappedBy = "session")
+    @OneToMany(mappedBy = "session",cascade = CascadeType.ALL)
     List<FeedbackSession>  feedbackSessions;
 
 

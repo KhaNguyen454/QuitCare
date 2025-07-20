@@ -33,7 +33,7 @@ public class CommunityPost {
 
     private String date;
 
-    @OneToMany(mappedBy = "communityPost")
+    @OneToMany(mappedBy = "communityPost",cascade = CascadeType.ALL)
             @JsonIgnore
     List<Comment> comments;
 
