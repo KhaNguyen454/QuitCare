@@ -37,11 +37,11 @@ public class Quitprogress
     @JsonIgnore
     private QuitPlanStage quitPlanStage;
 
-    @OneToMany(mappedBy = "quitprogress")
+    @OneToMany(mappedBy = "quitprogress", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<MessageNotification>  messageNotifications;
 
     @ManyToOne
-    @JoinColumn(name = "smoking_status_id")
+    @JoinColumn(name = "smoking_status_id", nullable = false)
     private SmokingStatus smokingStatus;
 }
