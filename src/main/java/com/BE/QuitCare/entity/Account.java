@@ -2,6 +2,7 @@ package com.BE.QuitCare.entity;
 
 
 import com.BE.QuitCare.enums.AccountStatus;
+import com.BE.QuitCare.enums.AuthProvider;
 import com.BE.QuitCare.enums.Gender;
 import com.BE.QuitCare.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -47,6 +48,11 @@ public class Account implements UserDetails {
     @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
+
+    private String providerId;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
