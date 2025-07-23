@@ -163,7 +163,10 @@ public class AuthenticationService implements UserDetailsService {
         }).toList();
     }
 
-
+    public Account findById(Long id) {
+        return authenticationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản với id: " + id));
+    }
 
 
     @Override
