@@ -159,6 +159,7 @@ public class AuthenticationService implements UserDetailsService {
             dto.setEmail(account.getEmail());
             dto.setGender(account.getGender() != null ? account.getGender().name() : null);
             dto.setAvatar(account.getAvatar());
+            dto.setDescription(account.getDescription());
             return dto;
         }).toList();
     }

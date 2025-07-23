@@ -10,4 +10,5 @@ public class CoachInfoDTO
     private String email;
     private String gender;
     private String avatar;
+    private String description;
 }

@@ -42,6 +42,7 @@ public class Account implements UserDetails {
     private Integer totalPoint = 0;
 
     private String avatar;
+    private String description;
 
     @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)

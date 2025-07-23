@@ -2,6 +2,7 @@ package com.BE.QuitCare.repository;
 
 import com.BE.QuitCare.entity.Account;
 import com.BE.QuitCare.entity.SessionUser;
+import com.BE.QuitCare.enums.LeaveStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,9 @@ public interface SessionUserRepository extends JpaRepository<SessionUser,Long>
 
     @Query("SELECT s FROM SessionUser s WHERE s.account.id = :accountId AND FUNCTION('DATE', s.date) = :date")
     List<SessionUser> findByAccountIdAndDate(@Param("accountId") Long accountId, @Param("date") LocalDate date);
+
+
+    List<SessionUser> findByLeaveStatus(LeaveStatus status);
 
 
 

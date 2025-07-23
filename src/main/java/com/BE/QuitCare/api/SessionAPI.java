@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -34,6 +35,26 @@ public class SessionAPI
         sessionService.updateAvailabilityDay(dto);
         return ResponseEntity.ok("Đã cập nhật trạng thái nghỉ thành công cho ngày " + dto.getDate());
     }
+
+    @PutMapping("/approve-leave")
+    public ResponseEntity<String> approveLeave(@RequestBody ApproveLeaveDTO dto) {
+        sessionService.approveCoachLeave(dto);
+        return ResponseEntity.ok("Đã xác nhận nghỉ cho coach trong ngày " + dto.getDate());
+    }
+
+    @GetMapping("/pending-leave-requests")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<List<CoachLeaveRequestDTO>> getPendingLeaveRequests() {
+        List<CoachLeaveRequestDTO> pendingRequests = sessionService.getPendingLeaveRequests();
+        return ResponseEntity.ok(pendingRequests);
+    }
+
+    @PutMapping("/cancel-leave")
+    public ResponseEntity<?> cancelLeave(@RequestBody ApproveLeaveDTO dto) {
+        sessionService.cancelCoachLeave(dto);
+        return ResponseEntity.ok("Yêu cầu nghỉ đã bị hủy thành công.");
+    }
+
 
 
     @GetMapping("/working-days")
