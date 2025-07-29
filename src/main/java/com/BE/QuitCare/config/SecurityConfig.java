@@ -2,7 +2,6 @@ package com.BE.QuitCare.config;
 
 
 import com.BE.QuitCare.service.AuthenticationService;
-import com.BE.QuitCare.service.TokenService;
 import com.BE.QuitCare.utils.OAuth2AuthenticationFailureHandler;
 import com.BE.QuitCare.utils.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
