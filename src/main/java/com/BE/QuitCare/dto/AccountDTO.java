@@ -15,4 +15,6 @@ public class AccountDTO
     private Gender gender;
     private Role role;
     private AccountStatus status;
+    private String avatar;
+    private String description;
 }

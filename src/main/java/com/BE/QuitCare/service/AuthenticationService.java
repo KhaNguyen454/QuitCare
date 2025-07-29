@@ -101,6 +101,8 @@ public class AuthenticationService implements UserDetailsService {
         account.setGender(dto.getGender());
         account.setRole(dto.getRole());
         account.setStatus(dto.getStatus());
+        account.setAvatar(dto.getAvatar());
+        account.setDescription(dto.getDescription());
 
         Account updated = authenticationRepository.save(account);
         return modelMapper.map(updated, AccountDTO.class);

@@ -109,7 +109,7 @@ public class QuitProgressService
         authenticationRepository.save(user);
 
         // Check thành tựu
-        userAchievementService.checkAndGenerate(user, quitprogress);
+      //  userAchievementService.checkAndGenerate(user, quitprogress);
         return saved;
     }
 
