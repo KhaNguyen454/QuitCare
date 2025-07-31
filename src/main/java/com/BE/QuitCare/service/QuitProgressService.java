@@ -301,6 +301,8 @@ public class QuitProgressService
                 .max(LocalDate::compareTo)
                 .orElse(null);
 
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+
         // Ngày không hút = ngày mà (mục tiêu - hút thực tế) >= 0
         long daysWithoutSmoking = progresses.stream()
                 .filter(p -> {
@@ -321,11 +323,9 @@ public class QuitProgressService
                 .mapToInt(Quitprogress::getMoney_saved)
                 .sum();
 
-        double completionRate = (double) daysWithoutSmoking / progresses.size() * 100;
+        double completionRate = (double) daysWithoutSmoking / totalDays * 100;
         completionRate = Math.round(completionRate * 10.0) / 10.0;
 
-        // Tính số ngày không nhập tiến trình
-        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         long daysNotTracked = totalDays - progresses.size();
 
         return new QuitProgressDTO2(startDate, endDate, daysWithoutSmoking, cigarettesAvoided, moneySaved, completionRate, daysNotTracked);

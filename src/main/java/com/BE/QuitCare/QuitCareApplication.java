@@ -9,8 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-
-
+import java.util.TimeZone;
 
 
 @SpringBootApplication
@@ -20,6 +19,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class QuitCareApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(QuitCareApplication.class, args);
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+
 	}
 
 }

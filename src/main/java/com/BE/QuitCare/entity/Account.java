@@ -42,7 +42,11 @@ public class Account implements UserDetails {
     @Column(nullable = false)
     private Integer totalPoint = 0;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String avatar;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     @Column(nullable = false, length = 50)
