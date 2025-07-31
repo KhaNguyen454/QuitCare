@@ -18,7 +18,9 @@ public interface QuitProgressRepository extends JpaRepository<Quitprogress, Long
 
     List<Quitprogress> findBySmokingStatus_IdOrderByDateDesc(Long smokingStatusId);
 
-    @Query("SELECT q FROM Quitprogress q WHERE q.quitPlanStage.id = :stageId AND q.smokingStatus.account.id = :userId")
-    List<Quitprogress> findByStageAndUser(@Param("stageId") Long stageId, @Param("userId") Long userId);
+
+
+    @Query("SELECT q FROM Quitprogress q WHERE q.smokingStatus IS NOT NULL AND q.smokingStatus.account.id = :userId")
+    List<Quitprogress> findByUserId(@Param("userId") Long userId);
 
 }

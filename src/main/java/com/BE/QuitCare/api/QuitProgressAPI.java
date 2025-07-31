@@ -76,12 +76,12 @@ public class  QuitProgressAPI
         return ResponseEntity.ok(saved);
     }
 
-    @GetMapping("/stage/{stageId}/user/{userId}")
-    public ResponseEntity<QuitProgressDTO2> getProgressByStage(
-            @PathVariable Long stageId,
+    @GetMapping("/user/{userId}/summary")
+    public ResponseEntity<QuitProgressDTO2> getProgressSummaryByUser(
             @PathVariable Long userId
     ) {
-        return ResponseEntity.ok(service.getProgressByStage(userId, stageId));
+        return ResponseEntity.ok(service.getProgressSummaryByUser(userId));
     }
+
 
 }

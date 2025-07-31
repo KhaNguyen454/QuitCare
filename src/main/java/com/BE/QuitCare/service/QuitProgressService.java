@@ -284,11 +284,11 @@ public class QuitProgressService
     }
 
 
-    public QuitProgressDTO2 getProgressByStage(Long userId, Long stageId) {
-        List<Quitprogress> progresses = quitProgressRepository.findByStageAndUser(stageId, userId);
+    public QuitProgressDTO2 getProgressSummaryByUser(Long userId) {
+        List<Quitprogress> progresses = quitProgressRepository.findByUserId(userId);
 
         if (progresses.isEmpty()) {
-            throw new BadRequestException("Không có dữ liệu tiến trình cho giai đoạn này");
+            throw new BadRequestException("Không có dữ liệu tiến trình cho người dùng này");
         }
 
         LocalDate startDate = progresses.stream()
