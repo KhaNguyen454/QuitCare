@@ -1,6 +1,7 @@
 package com.BE.QuitCare.api;
 
 import com.BE.QuitCare.dto.AccountDTO;
+import com.BE.QuitCare.dto.CommentDTO;
 import com.BE.QuitCare.repository.CommunityPostRepository;
 import com.BE.QuitCare.service.AuthenticationService;
 import com.BE.QuitCare.service.CommentService;
@@ -27,6 +28,14 @@ public class AdminAPI {
     public ResponseEntity<List<AccountDTO>> getAllAccounts() {
         List<AccountDTO> accounts = authenticationService.getAllAccounts();
         return ResponseEntity.ok(accounts);
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<AccountDTO> getAccountById(@PathVariable Long id){
+        return authenticationService.getAccountById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+
     }
 
     @PutMapping("/user/{id}")

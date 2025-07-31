@@ -60,21 +60,21 @@ public class TokenService {
         return authenticationRepository.findAccountByEmail(email);
     }
 
-//    public boolean validateToken(String token) {
-//        try {
-//            extractAllClaims(token); // sẽ throw nếu token không hợp lệ
-//            return !isTokenExpired(token);
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
-//    public String getEmailFromToken(String token) {
-//        return extractClaim(token, Claims::getSubject);
-//    }
-//
-//    public Long getUserIdFromToken(String token) {
-//        return extractAccount(token).getId(); // không cần viết riêng nếu có extractAccount
-//    }
+    public boolean validateToken(String token) {
+        try {
+            extractAllClaims(token); // sẽ throw nếu token không hợp lệ
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    public String getEmailFromToken(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long getUserIdFromToken(String token) {
+        return extractAccount(token).getId(); // không cần viết riêng nếu có extractAccount
+    }
 
 //    public boolean validateToken(String token) {
 //        try {

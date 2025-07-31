@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,6 +91,11 @@ public class AuthenticationService implements UserDetailsService {
                 .stream()
                 .map(account -> modelMapper.map(account, AccountDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    public Optional<AccountDTO> getAccountById(Long id){
+        return authenticationRepository.findById(id)
+                .map(account -> modelMapper.map(account, AccountDTO.class));
     }
 
     public AccountDTO updateAccount(Long id, AccountDTO dto) {
