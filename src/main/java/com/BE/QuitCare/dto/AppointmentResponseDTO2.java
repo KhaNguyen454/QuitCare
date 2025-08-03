@@ -30,4 +30,6 @@ public class AppointmentResponseDTO2
     private String membershipPlanName;
     private String membershipStart;
     private String membershipEnd;
+
+    private int remainingAppointments;
 }

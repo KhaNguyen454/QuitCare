@@ -25,6 +25,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long>
 
     int countByUserMembership_Id(Long membershipId);
 
+    boolean existsByAccount_IdAndStatus(Long accountId, AppointmentEnum status);
+
+
 
 
 }

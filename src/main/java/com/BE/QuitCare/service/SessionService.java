@@ -214,30 +214,12 @@ public class SessionService
     }
 
 
-    //// Chạy mỗi phút để test (không dùng trong production)
-   // @Scheduled(cron = "0 * * * * *")
+    // Chạy mỗi phút để test (không dùng trong production)
+    @Scheduled(cron = "0 * * * * *")
    //@Scheduled(cron = "0 0 0 1 * *") // chạy 00:00 ngày đầu tiên mỗi tháng
-//    public void autoGenerateCoachSessions() {
-//        LocalDate startDate = LocalDate.now().withDayOfMonth(1); // ngày đầu tháng
-//        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth()); // ngày cuối tháng
-//
-//        List<Account> coaches = authenticationRepository.findByRole(Role.COACH);
-//
-//        for (Account coach : coaches) {
-//            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-//                ensureSessionForCoachOnDate(coach, date);
-//            }
-//        }
-//
-//        System.out.println(" Tự động tạo lịch làm cho coach trong tháng: " + startDate.getMonth());
-//    }
-     @Scheduled(cron = "0 * * * * *")
-    //@Scheduled(cron = "0 0 0 L * *") // chạy vào 00:00 ngày cuối tháng
     public void autoGenerateCoachSessions() {
-         LocalDate now = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-         LocalDate nextMonth = now.plusMonths(1);// chuyển sang tháng sau
-        LocalDate startDate = nextMonth.withDayOfMonth(1); // ngày đầu tháng kế tiếp
-        LocalDate endDate = nextMonth.withDayOfMonth(nextMonth.lengthOfMonth()); // ngày cuối tháng kế tiếp
+        LocalDate startDate = LocalDate.now().withDayOfMonth(1); // ngày đầu tháng
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth()); // ngày cuối tháng
 
         List<Account> coaches = authenticationRepository.findByRole(Role.COACH);
 
@@ -247,9 +229,27 @@ public class SessionService
             }
         }
 
-        System.out.println("Đã tự động tạo lịch làm cho coach trong tháng: " + nextMonth.getMonth());
+        System.out.println(" Tự động tạo lịch làm cho coach trong tháng: " + startDate.getMonth());
     }
-
+//     @Scheduled(cron = "0 * * * * *")
+//    //@Scheduled(cron = "0 0 0 L * *") // chạy vào 00:00 ngày cuối tháng
+//    public void autoGenerateCoachSessions() {
+//         LocalDate now = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+//         LocalDate nextMonth = now.plusMonths(1);// chuyển sang tháng sau
+//        LocalDate startDate = nextMonth.withDayOfMonth(1); // ngày đầu tháng kế tiếp
+//        LocalDate endDate = nextMonth.withDayOfMonth(nextMonth.lengthOfMonth()); // ngày cuối tháng kế tiếp
+//
+//        List<Account> coaches = authenticationRepository.findByRole(Role.COACH);
+//
+//        for (Account coach : coaches) {
+//            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+//                ensureSessionForCoachOnDate(coach, date);
+//            }
+//        }
+//
+//        System.out.println("Đã tự động tạo lịch làm cho coach trong tháng: " + nextMonth.getMonth());
+//    }
+//
 
 
     public List<SessionUserDTO> getWorkingSessionsForCurrentCoach(LocalDate from, LocalDate to) {

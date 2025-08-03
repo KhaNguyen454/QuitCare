@@ -50,6 +50,13 @@ public class AppointmentService
             throw new BadRequestException("Chỉ CUSTOMER mới có thể đặt lịch hẹn.");
         }
 
+        // Chặn nếu đã có một cuộc hẹn PENDING
+        boolean hasPending = appointmentRepository.existsByAccount_IdAndStatus(customer.getId(), AppointmentEnum.PENDING);
+        if (hasPending) {
+            throw new BadRequestException("Bạn đã có một cuộc hẹn đang chờ xác nhận.");
+        }
+
+
         Account coach = authenticationRepository.findById(appointmentRequest.getCoachId())
                 .orElseThrow(() -> new BadRequestException("Coach not found"));
 
@@ -127,7 +134,10 @@ public class AppointmentService
             userMembershipRepository.save(membership);
         }
 
-        return mapToDto(appointment);
+        AppointmentResponseDTO2 response = mapToDto(appointment);
+        response.setRemainingAppointments(4 - newCount); // Set số lượt còn lại
+
+        return response;
     }
 
 
